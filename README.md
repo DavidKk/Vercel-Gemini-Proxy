@@ -10,3 +10,7 @@ Due to network conditions and geographical locations, access to the Gemini API c
 
 - This service must have its own domain name. Without a domain name, requests cannot be sent. Also, please try to set your DNS resolution in a region where Gemini allows access for successful connectivity.
 - The project requires a Gemini Token. Please set up and use your own token, and refrain from using tokens from others to prevent unauthorized use of the service.
+
+## Deploy With Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDavidKk%2Fvercel-gemini-proxy)
