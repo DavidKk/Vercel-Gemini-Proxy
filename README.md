@@ -14,3 +14,13 @@ Due to network conditions and geographical locations, access to the Gemini API c
 ## Deploy With Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDavidKk%2Fvercel-gemini-proxy)
+
+## Usage
+
+```bash
+$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-pro:streamGenerateContent?key=$GEMINI_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H 'cache-control: no-cache' \
+  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}'
+  --compressed
+```
