@@ -1,9 +1,9 @@
 # Dest resouces
-.next
-coverage
-junit.xml
-*.tsbuildinfo
-tsconfig.build.json
+/libs
+/coverage
+/junit.xml
+/gitlab-pages
+
 
 # Husky
 .husky
@@ -11,8 +11,8 @@ tsconfig.build.json
 # ESLINT
 .eslintcache
 
-
-# Npm or Yarn
+# Npm or Yarn or Pnpm
+pnpm-lock.yaml
 .yarn/*
 !.yarn/patches
 !.yarn/plugins

@@ -1,16 +1,22 @@
 # Dest resouces
+libs
+!**/src/**/libs
+!**/__tests__/**/libs
+build
 .next
 coverage
 junit.xml
-*.tsbuildinfo
-tsconfig.build.json
+gh-pages
+!.templaterc.ts
+!.readmerc.ts
+!.dumirc.ts
+!.dumljrc.ts
 
 # Husky
 .husky
 
 # ESLINT
 .eslintcache
-
 
 # Npm or Yarn
 .yarn/*
