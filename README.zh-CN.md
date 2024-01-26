@@ -17,6 +17,7 @@ Vercel Edge 上的 Gemini API 代理是一项代理服务，旨在解决某些�
 - 如果消息上下文最后一条信息或第一条信息 `role` 不为 `user` 时，可能会出现 `Please ensure that multiturn requests ends with a user role or a function response.` 错误。因此若第一条信息 `role` 不为 `user`时，服务会自动删除第一条（即第一条）信息。若最后一条信息 `role` 不为 `user` 时，将会报错不会将信息发送给 `Gemini`。
 - 仅当参数都满足条件 `body`、`key` 和 `Method`，才能正常请求，否则均返回 `401` 错误。
 - 由于 Vercel 可能会中断数据，因此服务会优先返回 `200` 状态，且等待 Gemini 的回复，并通过流的形式返回给用户。
+- 可以通过 Vercel 控制台 Log 查看日志情况。
 
 ## 使用 Vercel 部署
 

@@ -17,6 +17,7 @@ Due to network conditions and geographical locations, access to the Gemini API c
 - If the `role` of the last or the first message in the message context is not `user`, the error `Please ensure that multiturn requests ends with a user role or a function response.` may occur. Therefore, if the `role` of the first message is not `user`, the service will automatically delete the first (ie. the first) message. If the `role` of the last message is not user, an error will be reported and the message will not be sent to Gemini.
 - Only when the parameters meet all the conditions of `body`, `key` and `Method`, can a normal request be made, otherwise a `401` error will be returned.
 - Since Vercel may interrupt data, the service will first return a `200` status, wait for Gemini's reply, and return it to the user in the form of a stream.
+- Check the log situation via the Vercel console Log.
 
 ## Deploy With Vercel
 
