@@ -6,8 +6,8 @@
   "scripts": {
     "commit": "git-cz",
     "ci:coverage": "npm run test",
-    "postinstall": "if [ -f ./scripts/postinstall.mjs ]; then node --experimental-modules ./scripts/postinstall.mjs; else exit 0; fi",
-    "preinstall": "if [ -f ./scripts/preinstall.mjs ]; then node --experimental-modules ./scripts/preinstall.mjs; else exit 0; fi",
+    "postinstall": "node --experimental-modules ./scripts/postinstall.mjs",
+    "preinstall": "node --experimental-modules ./scripts/preinstall.mjs",
     "clear": "rimraf --glob ./libs",
     "format": "prettier --config .prettierrc.js --write \"**/*.{js,jsx,ts,tsx,d.ts,vue,md,json,yml,yaml}\"",
     "lint": "npm run lint:ts",
