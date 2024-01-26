@@ -1,5 +1,7 @@
 # Vercel Gemini Proxy
 
+[![中文](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-green?style=flat-square&logo=docs)](https://github.com/your-project/your-project-repo/blob/main/docs/zh-CN/README.md) [![English](https://img.shields.io/badge/docs-English-green?style=flat-square&logo=docs)](https://github.com/your-project/your-project-repo/blob/main/docs/en-US/README.md)
+
 Gemini API proxy on Vercel Edge is a proxy service designed to address issues of slow or inaccessible access to the Gemini API in certain regions.
 
 ## Background
@@ -9,7 +11,10 @@ Due to network conditions and geographical locations, access to the Gemini API c
 ## Important Notes
 
 - This service must have its own domain name. Without a domain name, requests cannot be sent. Also, please try to set your DNS resolution in a region where Gemini allows access for successful connectivity.
-- The project requires a Gemini Token. Please set up and use your own token, and refrain from using tokens from others to prevent unauthorized use of the service.
+- The project requires a `Gemini API Token`. Please set up and use your own token, and refrain from using tokens from others to prevent unauthorized use of the service.
+- If the `role` of the last or the first message in the message context is not `user`, the error `Please ensure that multiturn requests ends with a user role or a function response.` may occur. Therefore, if the `role` of the first message is not `user`, the service will automatically delete the first (ie. the first) message. If the `role` of the last message is not user, an error will be reported and the message will not be sent to Gemini.
+- Only when the parameters meet all the conditions of `body`, `key` and `Method`, can a normal request be made, otherwise a `401` error will be returned.
+- Since Vercel may interrupt data, the service will first return a `200` status, wait for Gemini's reply, and return it to the user in the form of a stream.
 
 ## Deploy With Vercel
 
