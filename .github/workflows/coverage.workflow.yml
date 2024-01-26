@@ -1,6 +1,9 @@
 name: Coverage
 
-on: [workflow_call]
+on:
+  push:
+    branches:
+      - '**'
 
 env:
   # 产物文件名称
@@ -14,7 +17,7 @@ jobs:
     strategy:
       matrix:
         node_version: ['20']
-        os: [macOS-latest, ubuntu-latest, windows-latest]
+        os: [macOS-latest]
     steps:
       # 初始化
       - name: Initialize project
