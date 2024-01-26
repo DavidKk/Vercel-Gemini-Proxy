@@ -1,6 +1,6 @@
 # Vercel Gemini 代理
 
-[![中文](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-green?style=flat-square&logo=docs)](https://github.com/your-project/your-project-repo/blob/main/docs/zh-CN/README.md) [![English](https://img.shields.io/badge/docs-English-green?style=flat-square&logo=docs)](https://github.com/your-project/your-project-repo/blob/main/docs/en-US/README.md)
+[![中文](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-green?style=flat-square&logo=docs)](https://github.com/DavidKk/vercel-gemini-proxy/blob/main/README.zh-CN.md) [![English](https://img.shields.io/badge/docs-English-green?style=flat-square&logo=docs)](https://github.com/DavidKk/vercel-gemini-proxy/blob/main/README.md)
 
 Vercel Edge 上的 Gemini API 代理是一项代理服务，旨在解决某些地区访问 Gemini API 速度慢或无法访问的问题。
 

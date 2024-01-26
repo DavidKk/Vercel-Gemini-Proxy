@@ -1,6 +1,6 @@
 # Vercel Gemini Proxy
 
-[![中文](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-green?style=flat-square&logo=docs)](https://github.com/your-project/your-project-repo/blob/main/docs/zh-CN/README.md) [![English](https://img.shields.io/badge/docs-English-green?style=flat-square&logo=docs)](https://github.com/your-project/your-project-repo/blob/main/docs/en-US/README.md)
+[![中文](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-green?style=flat-square&logo=docs)](https://github.com/DavidKk/vercel-gemini-proxy/blob/main/README.zh-CN.md) [![English](https://img.shields.io/badge/docs-English-green?style=flat-square&logo=docs)](https://github.com/DavidKk/vercel-gemini-proxy/blob/main/README.md)
 
 Gemini API proxy on Vercel Edge is a proxy service designed to address issues of slow or inaccessible access to the Gemini API in certain regions.
 
