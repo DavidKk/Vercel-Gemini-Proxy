@@ -5,6 +5,7 @@
   "description": "Gemini API proxy on Vercel Edge.",
   "scripts": {
     "commit": "git-cz",
+    "ci:coverage": "npm run test",
     "postinstall": "if [ -f ./scripts/postinstall.mjs ]; then node --experimental-modules ./scripts/postinstall.mjs; else exit 0; fi",
     "preinstall": "if [ -f ./scripts/preinstall.mjs ]; then node --experimental-modules ./scripts/preinstall.mjs; else exit 0; fi",
     "clear": "rimraf --glob ./libs",
