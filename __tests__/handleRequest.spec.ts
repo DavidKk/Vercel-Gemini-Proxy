@@ -15,7 +15,7 @@ describe('test handleRequest', () => {
       ],
     }
 
-    const request = new Request('https://example.com/v1/projects/my-project/locations/us-central1/agents/my-agent/sessions/1234567890:detectIntent', {
+    const request = new Request('https://example.com/v1/projects/my-project/locations/us-central1/agents/my-agent/sessions/1234567890:detectIntent?key=123', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,0 +1,31 @@
+name: Coverage
+
+on: [workflow_call]
+
+env:
+  # 产物文件名称
+  CI_COVERAGE_ARTIFACT_FILE: coverage-${{ github.sha }}
+
+jobs:
+  # 测试任务
+  test:
+    name: test#node-${{ matrix.node_version }}#${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node_version: ['20']
+        os: [macOS-latest, ubuntu-latest, windows-latest]
+    steps:
+      # 初始化
+      - name: Initialize project
+        uses: dumlj/dumlj-workflows/.github/actions/setup.node@main
+        with:
+          node_version: ${{ matrix.node_version }}
+          git_access_token: ${{ secrets.CI_GIT_TOKEN }}
+      # 测试/覆盖率
+      - name: Run tests and collect coverage
+        uses: dumlj/dumlj-workflows/.github/actions/coverage.node@main
+        if: ${{ matrix.node_version == '20' }}
+        with:
+          artifact_name: $CI_COVERAGE_ARTIFACT_FILE
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
