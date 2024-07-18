@@ -1,9 +1,9 @@
 import { ProcessTransformStream } from './libs/ProcessTransformStream'
 import { createContext } from './createContext'
-import { createException } from './createException'
 import { handleRequest } from './handleRequest'
+import { createErrorResponse } from './libs/response'
 
-export default async (request: Request & { nextUrl?: URL }) => {
+export default async function proxy(request: Request & { nextUrl?: URL }) {
   const context = createContext(request)
   const { logger } = context
 
@@ -11,10 +11,8 @@ export default async (request: Request & { nextUrl?: URL }) => {
   responseStream.process(({ message }) => logger.response.info(message))
 
   try {
-    const response = await handleRequest(context)
-    return response
+    return handleRequest(context)
   } catch (error) {
-    const body = createException(error instanceof Error ? error.message : error!.toString())
-    return new Response(JSON.stringify(body), { status: 500, statusText: 'system error' })
+    return createErrorResponse(error, 500, { statusText: 'system error' })
   }
 }

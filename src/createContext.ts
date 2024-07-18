@@ -1,6 +1,6 @@
 import { createLogger } from './services/logger'
 
-export const createContext = (request: Request & { nextUrl?: URL }) => {
+export function createContext(request: Request & { nextUrl?: URL }) {
   const logger = createLogger('request', 'response')
   return { logger, request }
 }

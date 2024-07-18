@@ -1,4 +1,4 @@
-export const pickHeaders = (headers: Headers, keys: (string | RegExp)[]): Headers => {
+export function pickHeaders(headers: Headers, keys: (string | RegExp)[]): Headers {
   const picked = new Headers()
 
   for (const key of headers.keys()) {

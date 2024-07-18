@@ -3,55 +3,36 @@ import { ProcessTransformStream } from './libs/ProcessTransformStream'
 import { getContentLength } from './utils/getContentLength'
 import { pickHeaders } from './utils/pickHeaders'
 import { convertStringToUint8Array } from './utils/convertStringToUint8Array'
-import { GOOGLE_GEMINI_API_URL, CORS_HEADERS, TIMEOUT } from './constants/conf'
+import { GOOGLE_GEMINI_API_URL, TIMEOUT } from './constants/conf'
 import type { Message } from './types/message'
-import { createException } from './createException'
 import type { Context } from './createContext'
+import { createErrorResponse, createException, createResponse } from './libs/response'
 
-const createErrorResponse = (content: string | Record<string, any> | null, status = 401) => {
-  const { headers, body } = (() => {
-    if (content === null) {
-      return { headers: undefined, body: null }
-    }
-
-    if (typeof content === 'object') {
-      const headers = { 'Content-Type': 'application/json' }
-      const body = JSON.stringify(content)
-      return { headers, body }
-    }
-
-    const headers = { 'Content-Type': 'text/html' }
-    const body = content
-    return { headers, body }
-  })()
-
-  return new Response(body, { status, headers: { ...CORS_HEADERS, ...headers } })
-}
-
-/**
- * Handle the incoming request.
- * @param context The context of the request.
- */
-export const handleRequest = async (context: Context) => {
+/** Handle the incoming request. */
+export async function handleRequest(context: Context) {
   const { request, logger } = context
   const { method, nextUrl, url } = request
   if (method === 'OPTIONS') {
-    return createErrorResponse(null)
+    return createErrorResponse(null, 500)
   }
 
   const requestUrl = nextUrl ? nextUrl : new URL(url)
   const { pathname, searchParams } = requestUrl
   logger.request.info(`Use ${method.toUpperCase()} to request ${pathname} with search ${JSON.stringify(searchParams, null, 2)}`)
 
-  // The address must contain /v1 or /v1beta, otherwise it is definitely not a request to gemini, and it must contain a token, otherwise it definitely does not have permission.
+  // The address must contain /v1 or /v1beta,
+  // otherwise it is definitely not a request to gemini,
+  // and it must contain a token,
+  // otherwise it definitely does not have permission.
   if (!searchParams.has('key') || !(pathname.startsWith('/v1') || pathname.startsWith('/v1beta'))) {
-    return createErrorResponse('No permission')
+    return createErrorResponse('No permission', 401)
   }
 
   // The content of the request cannot be empty.
   const { headers: reqHeaders, body } = request
   if (!body) {
-    return createErrorResponse('Proxy failed: body is empty.')
+    logger.request.fail('Proxy failed: body is empty.')
+    return createErrorResponse('Proxy failed: body is empty.', 403)
   }
 
   const readBody = async (): Promise<Message> => {
@@ -80,6 +61,7 @@ export const handleRequest = async (context: Context) => {
    */
   const payload = await readBody()
   const firstContnet = payload?.contents.at(0)
+
   /**
    * If the role of the first and last message is not `user`,
    * the error `Please ensure that multiturn requests ends with a user role or a function response.`
@@ -97,7 +79,8 @@ export const handleRequest = async (context: Context) => {
    */
   const lastContent = payload?.contents?.at(-1)
   if (lastContent?.role !== 'user') {
-    return new Response(JSON.stringify(lastContent), { status: 200, statusText: 'ok' })
+    logger.response.warn('The last message in the payload does not have the role of "user".')
+    return createResponse(lastContent || null)
   }
 
   const proxyUrl = new URL(pathname, GOOGLE_GEMINI_API_URL)
@@ -111,7 +94,13 @@ export const handleRequest = async (context: Context) => {
 
   const requestStartTime = Date.now()
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(new Error(`The request timed out for more than ${(TIMEOUT / 1e3).toFixed(2)}m.`)), TIMEOUT)
+  const handleTimeout = () => {
+    const reason = new Error(`The request timed out for more than ${(TIMEOUT / 1e3).toFixed(2)}m.`)
+    logger.request.fail(reason.message)
+    return controller.abort(reason)
+  }
+
+  const timeoutId = setTimeout(handleTimeout, TIMEOUT)
   const fetchOptions: RequestInit = {
     method,
     headers,
@@ -146,6 +135,7 @@ export const handleRequest = async (context: Context) => {
     if (400 <= status || status > 200) {
       const result = await response.text()
       const message = `Proxy failed with status code ${status}.`
+
       logger.response.fail(`${message}\nResponse content is ${result}.`)
       await write(JSON.stringify({ failed: true, message, result }))
       return
@@ -155,7 +145,6 @@ export const handleRequest = async (context: Context) => {
     try {
       const responseStartTime = Date.now()
       const reader = body.getReader()
-
       const read = async () => {
         const { done, value } = await reader.read()
         if (done) {
@@ -193,8 +182,9 @@ export const handleRequest = async (context: Context) => {
     const message = error instanceof Error ? error.message : error?.toString()
     const writer = stream.getWriter()
     await writer.ready
+
     const exception = createException(message)
-    await writer.write(JSON.stringify(exception))
+    await writer.write(exception.toJson())
     await writer.close()
   }
 
@@ -210,7 +200,10 @@ export const handleRequest = async (context: Context) => {
       await handleResponse(response)
     })
     .catch(async (error) => {
+      logger.response.fail(`Proxy failed with some errors.\n${error}`)
+
       if (responseStream.writable.locked) {
+        logger.response.fail('Close the response stream.')
         responseStream.writable.getWriter().releaseLock()
       }
 
@@ -220,8 +213,6 @@ export const handleRequest = async (context: Context) => {
       await handleResponse(error)
     })
 
-  /**
-   * Return 200 first, then wait for the gemini stream to return the result.
-   */
+  logger.response.info('proxy stream start.')
   return new Response(responseStream.readable, { status: 200, statusText: 'ok', headers })
 }

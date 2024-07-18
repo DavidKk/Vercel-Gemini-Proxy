@@ -3,11 +3,11 @@ const config = {
   async rewrites() {
     return [
       {
-        source: "/:_path*",
-        destination: "/api/proxy"
+        source: '/:_path*',
+        destination: '/api/proxy',
       },
-    ];
+    ]
   },
-};
+}
 
-export default config;
+export default config

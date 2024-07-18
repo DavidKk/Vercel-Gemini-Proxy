@@ -25,26 +25,26 @@ describe('test ProcessTransformStream', () => {
 
     expect(processFn).toHaveBeenNthCalledWith(1, {
       size: 3,
-      sizeStr: '3B',
+      sizeStr: '3 Bytes',
       percentage: 0.03,
       percentageStr: '3.00%',
-      message: '3B of content has been transmitted.(3.00%)',
+      message: '3 Bytes of content has been transmitted.(3.00%)',
     })
 
     expect(processFn).toHaveBeenNthCalledWith(2, {
       size: 6,
-      sizeStr: '6B',
+      sizeStr: '6 Bytes',
       percentage: 0.06,
       percentageStr: '6.00%',
-      message: '6B of content has been transmitted.(6.00%)',
+      message: '6 Bytes of content has been transmitted.(6.00%)',
     })
 
     expect(processFn).toHaveBeenNthCalledWith(3, {
       size: 9,
-      sizeStr: '9B',
+      sizeStr: '9 Bytes',
       percentage: 0.09,
       percentageStr: '9.00%',
-      message: '9B of content has been transmitted.(9.00%)',
+      message: '9 Bytes of content has been transmitted.(9.00%)',
     })
   })
 
@@ -70,10 +70,10 @@ describe('test ProcessTransformStream', () => {
     expect(processFn).toHaveBeenCalledTimes(1)
     expect(processFn).toHaveBeenCalledWith({
       size: 3,
-      sizeStr: '3B',
+      sizeStr: '3 Bytes',
       percentage: 0.03,
       percentageStr: '3.00%',
-      message: '3B of content has been transmitted.(3.00%)',
+      message: '3 Bytes of content has been transmitted.(3.00%)',
     })
   })
 
