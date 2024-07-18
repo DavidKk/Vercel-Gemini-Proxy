@@ -1,5 +1,4 @@
 import { createException } from './createException'
-import { createResponse } from './createResponse'
 
 export function createErrorResponse(content: unknown, status: number, init?: Omit<ResponseInit, 'status'>) {
   const exception = createException(
@@ -24,5 +23,5 @@ export function createErrorResponse(content: unknown, status: number, init?: Omi
     })()
   )
 
-  return createResponse(exception, { status, ...init })
+  return new Response(JSON.stringify(exception), { status, ...init })
 }
