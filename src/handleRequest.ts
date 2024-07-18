@@ -18,13 +18,21 @@ export async function handleRequest(context: Context) {
 
   const requestUrl = nextUrl ? nextUrl : new URL(url)
   const { pathname, searchParams } = requestUrl
-  logger.request.info(`Use ${method.toUpperCase()} to request ${pathname} with search ${JSON.stringify(searchParams, null, 2)}`)
+  const params = Object.fromEntries(
+    (function* () {
+      for (const item of searchParams.entries()) {
+        yield item
+      }
+    })()
+  )
+
+  logger.request.info(`Use ${method.toUpperCase()} to request ${pathname} with search ${JSON.stringify(params, null, 2)}`)
 
   // The address must contain /v1 or /v1beta,
   // otherwise it is definitely not a request to gemini,
   // and it must contain a token,
   // otherwise it definitely does not have permission.
-  if (!searchParams.has('key') || !(pathname.startsWith('/v1') || pathname.startsWith('/v1beta'))) {
+  if (!searchParams.has('key') || !(pathname.startsWith('/api/v1') || pathname.startsWith('/api/v1beta'))) {
     return createErrorResponse('No permission', 401)
   }
 
@@ -83,7 +91,8 @@ export async function handleRequest(context: Context) {
     return createResponse(lastContent || null)
   }
 
-  const proxyUrl = new URL(pathname, GOOGLE_GEMINI_API_URL)
+  const proxyPath = pathname.replace(/^\/api/, '')
+  const proxyUrl = new URL(proxyPath, GOOGLE_GEMINI_API_URL)
   searchParams.delete('_path')
   searchParams.forEach((value, key) => proxyUrl.searchParams.append(key, value))
   logger.request.info(`Request "${requestUrl.toString()}" proxy to "${proxyUrl.toString()}".`)
@@ -128,16 +137,18 @@ export async function handleRequest(context: Context) {
 
     if (!body) {
       logger.response.fail(`Proxy failed with status code ${status}.\nResponse content is empty.`)
-      await write(JSON.stringify({ message: 'Nothing response.' }))
+      const exception = createException('Nothing response.')
+      await write(exception.toJson())
       return
     }
 
     if (400 <= status || status > 200) {
       const result = await response.text()
-      const message = `Proxy failed with status code ${status}.`
+      const message = `Proxy failed with status code ${status}. reason:${result}`
+      const exception = createException(message)
 
       logger.response.fail(`${message}\nResponse content is ${result}.`)
-      await write(JSON.stringify({ failed: true, message, result }))
+      await write(exception.toJson())
       return
     }
 
@@ -188,7 +199,7 @@ export async function handleRequest(context: Context) {
     await writer.close()
   }
 
-  /** Post-processing errors to prevent vercel from exiting in the middle. */
+  logger.request.info(`Proxy request ${proxyUrl} with options ${JSON.stringify(fetchOptions, null, 2)}.`)
   fetch(proxyUrl, fetchOptions)
     .then(async (response) => {
       clearTimeout(timeoutId)

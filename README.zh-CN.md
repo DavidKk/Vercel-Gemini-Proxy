@@ -26,9 +26,9 @@ Vercel Edge 上的 Gemini API 代理是一项代理服务，旨在解决某些�
 ## 用法
 
 ```bash
-$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-pro:streamGenerateContent?key=$GEMINI_API_TOKEN" \
+$ curl "http://$YOU_SERVER_HOST:$PORT/v1/models/gemini-pro:generateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H 'cache-control: no-cache' \
-  --data-raw '{"contents":[{"role":"user","parts":[{"text":"你好 Gemini"}]}]}'
+  --data-raw '{"contents":[{"role":"user","parts":[{"text":"你好 Gemini"}]}]}' \
   --compressed
 ```
