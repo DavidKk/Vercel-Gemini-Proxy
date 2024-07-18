@@ -29,6 +29,6 @@ Due to network conditions and geographical locations, access to the Gemini API c
 $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-pro:streamGenerateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H 'cache-control: no-cache' \
-  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}'
+  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}' \
   --compressed
 ```
