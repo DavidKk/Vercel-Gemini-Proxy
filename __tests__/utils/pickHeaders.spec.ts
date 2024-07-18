@@ -5,7 +5,7 @@ describe('test utils/pickHeaders', () => {
     const headers = new Headers()
     const keys = ['content-type', 'content-length']
     const picked = pickHeaders(headers, keys)
-    expect(picked).toEqual(new Headers())
+    expect(picked).toEqual({})
   })
 
   it('should return a Headers object with the specified headers', () => {
@@ -15,12 +15,10 @@ describe('test utils/pickHeaders', () => {
     headers.set('x-custom-header', 'value')
     const keys = ['content-type', 'content-length']
     const picked = pickHeaders(headers, keys)
-    expect(picked).toEqual(
-      new Headers({
-        'content-type': 'application/json',
-        'content-length': '100',
-      })
-    )
+    expect(picked).toEqual({
+      'content-type': 'application/json',
+      'content-length': '100',
+    })
   })
 
   it('should return a Headers object with the specified headers using a RegExp key', () => {
@@ -30,12 +28,10 @@ describe('test utils/pickHeaders', () => {
     headers.set('x-custom-header', 'value')
     const keys = [/^content-/]
     const picked = pickHeaders(headers, keys)
-    expect(picked).toEqual(
-      new Headers({
-        'content-type': 'application/json',
-        'content-length': '100',
-      })
-    )
+    expect(picked).toEqual({
+      'content-type': 'application/json',
+      'content-length': '100',
+    })
   })
 
   it('should return a Headers object with the specified headers, including non-string values', () => {
@@ -45,11 +41,9 @@ describe('test utils/pickHeaders', () => {
     headers.set('x-custom-header', 'value')
     const keys = ['content-type', 'content-length']
     const picked = pickHeaders(headers, keys)
-    expect(picked).toEqual(
-      new Headers({
-        'content-type': 'application/json',
-        'content-length': '100',
-      })
-    )
+    expect(picked).toEqual({
+      'content-type': 'application/json',
+      'content-length': '100',
+    })
   })
 })

@@ -28,7 +28,15 @@ Due to network conditions and geographical locations, access to the Gemini API c
 ```bash
 $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-pro:streamGenerateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "x-gemini-proxy-secret: $SECRET_KEY" \
   -H 'cache-control: no-cache' \
   --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}' \
   --compressed
 ```
+
+### Parameters
+
+**SECRET_KEY**: User Limitation
+
+- Generate SECRET_KEY using `pnpm secret` and write it to the environment variables.
+- If not set, there will be no user limitation.

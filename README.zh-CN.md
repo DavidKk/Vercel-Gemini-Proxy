@@ -28,7 +28,15 @@ Vercel Edge 上的 Gemini API 代理是一项代理服务，旨在解决某些�
 ```bash
 $ curl "http://$YOU_SERVER_HOST:$PORT/v1/models/gemini-pro:generateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "x-gemini-proxy-secret: $SECRET_KEY" \
   -H 'cache-control: no-cache' \
   --data-raw '{"contents":[{"role":"user","parts":[{"text":"你好 Gemini"}]}]}' \
   --compressed
 ```
+
+### 参数
+
+**SECRET_KEY**: 用户限制
+
+- 使用 `pnpm secret` 生成 SECRET_KEY，并将其写入环境变量。
+- 如果不设置，则不会有用户限制。
