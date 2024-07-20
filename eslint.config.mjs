@@ -1,8 +1,8 @@
 import importPlugin from 'eslint-plugin-import'
 import prettierPlugin from 'eslint-plugin-prettier'
-import tsConfig from './public/eslintrc/ts.mjs'
-import cjsConfig from './public/eslintrc/cjs.mjs'
-import esmConfig from './public/eslintrc/esm.mjs'
+import tsConfig from './eslintrc/ts.mjs'
+import cjsConfig from './eslintrc/cjs.mjs'
+import esmConfig from './eslintrc/esm.mjs'
 
 export default [
   {
@@ -37,7 +37,7 @@ export default [
       'eslint-plugin-import/no-extraneous-dependencies': [
         'warn',
         {
-          devDependencies: ['**/*.spec.ts', '**/*/jest.config.*.ts', 'public/**/*.mjs', 'scripts/**/*.mjs', 'jest/**/*.ts', '.cz-config.js', '**/eslint.config.mjs'],
+          devDependencies: ['**/*.spec.ts', '**/*/jest.config.*.ts', 'eslintrc/**/*.mjs', 'scripts/**/*.mjs', 'jest/**/*.ts', '.cz-config.js', '**/eslint.config.mjs'],
         },
       ],
     },
