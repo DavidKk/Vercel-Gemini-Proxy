@@ -28,13 +28,17 @@ Due to network conditions and geographical locations, access to the Gemini API c
 ```bash
 $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-pro:streamGenerateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -H "x-vercel-protection-bypass: $VERCEL_SECRET"
+  -H "x-vercel-protection-bypass: $VERCEL_SECRET" \
   -H 'cache-control: no-cache' \
   --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}' \
   --compressed
 ```
 
 ### Parameters
+
+**GEMINI_API_TOKEN**: Gemini API KEY
+
+Apply for a Google app, add Gemini, and get API keys.
 
 **VERCEL_SECRET**: User Limitation
 

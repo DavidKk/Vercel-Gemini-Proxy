@@ -36,6 +36,10 @@ $ curl "http://$YOU_SERVER_HOST:$PORT/v1/models/gemini-pro:generateContent?key=$
 
 ### 参数
 
+**GEMINI_API_TOKEN**: Gemini API KEY
+
+申请 Google 应用，添加 Gemini 并获取 API KEY。
+
 **VERCEL_SECRET**: 用户限制
 
 参考 Vercel 中的 `Deployment Protection` > `Protection Bypass for Automation` 设置。
