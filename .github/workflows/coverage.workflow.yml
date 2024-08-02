@@ -19,16 +19,32 @@ jobs:
         node_version: ['20']
         os: [macOS-latest]
     steps:
-      # 初始化
-      - name: Initialize project
-        uses: dumlj/dumlj-workflows/.github/actions/setup.node@main
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v4
         with:
-          node_version: ${{ matrix.node_version }}
-          git_access_token: ${{ secrets.CI_GIT_TOKEN }}
-      # 测试/覆盖率
+          node-version: 'latest'
+
+      - name: Enable corepack
+        shell: bash
+        run: corepack enable
+
+      - name: Install dependencies
+        shell: bash
+        run: pnpm install
+
+      # 测试
       - name: Run tests and collect coverage
-        uses: dumlj/dumlj-workflows/.github/actions/coverage.node@main
-        if: ${{ matrix.node_version == '20' }}
-        with:
-          artifact_name: $CI_COVERAGE_ARTIFACT_FILE
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
+        shell: bash
+        run: pnpm ci:coverage
+        env:
+          # @see https://github.com/actions/runner-images/issues/70
+          NODE_OPTIONS: '--max_old_space_size=4096'
+
+      # 上传覆盖率
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ inputs.codecov_token }}
