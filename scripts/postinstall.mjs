@@ -1,5 +1,6 @@
 import { exec } from 'child_process'
 import Spinnies from 'spinnies'
+
 import { husky } from './husky.mjs'
 
 const spinnies = new Spinnies()

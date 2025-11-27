@@ -1,9 +1,9 @@
 import type { Config } from '@jest/types'
 import fs from 'fs'
-import path from 'path'
 import JSON5 from 'json5'
-import type { CompilerOptions } from 'typescript'
+import path from 'path'
 import { pathsToModuleNameMapper } from 'ts-jest'
+import type { CompilerOptions } from 'typescript'
 
 const tsconfigFile = path.join(__dirname, './tsconfig.json')
 const tsconfigContent = fs.readFileSync(tsconfigFile, 'utf-8')

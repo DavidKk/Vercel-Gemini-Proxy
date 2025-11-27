@@ -26,7 +26,7 @@ Due to network conditions and geographical locations, access to the Gemini API c
 ## Usage
 
 ```bash
-$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-pro:streamGenerateContent?key=$GEMINI_API_TOKEN" \
+$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H "x-vercel-protection-bypass: $VERCEL_SECRET" \
   -H 'cache-control: no-cache' \

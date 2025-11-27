@@ -1,4 +1,5 @@
 import { expectType } from 'tsd-lite'
+
 import type { ValuesTypeOfArray } from '@/types/utils'
 
 describe('types/utils', () => {

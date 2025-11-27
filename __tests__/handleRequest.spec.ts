@@ -1,6 +1,6 @@
+import { createContext } from '@/createContext'
 import { handleRequest } from '@/handleRequest'
 import type { Message } from '@/types/message'
-import { createContext } from '@/createContext'
 
 describe('test handleRequest', () => {
   it('should return a 200 response with the correct content-type header', async () => {

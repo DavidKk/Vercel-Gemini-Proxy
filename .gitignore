@@ -60,3 +60,9 @@ nbproject
 *.sublime-workspace
 .idea
 .env
+
+# Playwright
+test-results
+playwright-report
+blob-report
+playwright/.cache
