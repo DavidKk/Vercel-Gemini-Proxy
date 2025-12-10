@@ -24,9 +24,9 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "next": "canary",
-    "react": "canary",
-    "react-dom": "canary"
+    "next": "15.5.7",
+    "react": "^19.1.2",
+    "react-dom": "^19.1.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
@@ -36,7 +36,8 @@
     "@types/chalk": "^2.2.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.14.11",
-    "@types/react": "18.3.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
     "chalk": "^5.3.0",
@@ -45,6 +46,7 @@
     "cz-customizable": "^7.2.1",
     "cz-customizable-i18n-config": "^0.0.1-alpha.2",
     "eslint": "^9.7.0",
+    "eslint-config-next": "15.5.7",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -66,5 +68,5 @@
     "typescript": "^5.5.3",
     "typescript-transform-paths": "^3.4.7"
   },
-  "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
+  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
 }
