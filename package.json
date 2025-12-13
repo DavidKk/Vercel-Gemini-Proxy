@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "next": "15.5.7",
+    "next": "15.5.9",
     "react": "^19.1.2",
     "react-dom": "^19.1.2"
   },
@@ -46,7 +46,7 @@
     "cz-customizable": "^7.2.1",
     "cz-customizable-i18n-config": "^0.0.1-alpha.2",
     "eslint": "^9.7.0",
-    "eslint-config-next": "15.5.7",
+    "eslint-config-next": "15.5.9",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -68,5 +68,5 @@
     "typescript": "^5.5.3",
     "typescript-transform-paths": "^3.4.7"
   },
-  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
+  "packageManager": "pnpm@10.25.0+sha512.5e82639027af37cf832061bcc6d639c219634488e0f2baebe785028a793de7b525ffcd3f7ff574f5e9860654e098fe852ba8ac5dd5cefe1767d23a020a92f501"
 }
