@@ -6,6 +6,7 @@ import { type WebWritableStream, WritableStream } from './libs/TransformStream'
 import type { Message } from './types/message'
 import { convertStringToUint8Array } from './utils/convertStringToUint8Array'
 import { getContentLength } from './utils/getContentLength'
+import { parseGeminiResponse } from './utils/parseGeminiResponse'
 import { pickHeaders } from './utils/pickHeaders'
 
 /** Handle the incoming request. */
@@ -205,6 +206,30 @@ export async function handleRequest(context: Context) {
       clearTimeout(timeoutId)
 
       logger.request.info(`Request spent ${((Date.now() - requestStartTime) / 1e3).toFixed(3)}s.`)
+
+      if (response.ok) {
+        try {
+          const data = await response.json()
+          const parsed = parseGeminiResponse(data)
+
+          const writer = responseStream.writable.getWriter()
+          await writer.ready
+          await writer.write(convertStringToUint8Array(parsed))
+          await writer.close()
+          writer.releaseLock()
+          return
+        } catch (error) {
+          logger.response.warn(`Failed to parse Gemini response. Error: ${error}`)
+          const writer = responseStream.writable.getWriter()
+          await writer.ready
+          const errorMsg = createException('Failed to parse Gemini response').toJson()
+          await writer.write(convertStringToUint8Array(errorMsg))
+          await writer.close()
+          writer.releaseLock()
+          return
+        }
+      }
+
       responseStream.setContentSize(getContentLength(response.headers))
 
       const handleResponse = writeResponseToWritableStream(responseStream.writable)
