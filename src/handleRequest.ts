@@ -178,7 +178,7 @@ export async function handleRequest(context: Context) {
 
       await read()
 
-      logger.response.info(`Response spent ${((Date.now() - responseStartTime) / 1e3).toFixed(3)} s.`)
+      logger.response.info(`Response took ${((Date.now() - responseStartTime) / 1e3).toFixed(3)} s.`)
     } catch (error) {
       const message = error instanceof Error ? error?.message : error
       logger.response.fail(`Proxy failed with some errors.\n${message}`)
@@ -206,7 +206,7 @@ export async function handleRequest(context: Context) {
     .then(async (response) => {
       clearTimeout(timeoutId)
 
-      logger.request.info(`Request spent ${((Date.now() - requestStartTime) / 1e3).toFixed(3)}s.`)
+      logger.request.info(`Request took ${((Date.now() - requestStartTime) / 1e3).toFixed(3)}s.`)
 
       if (response.ok) {
         try {
@@ -250,6 +250,6 @@ export async function handleRequest(context: Context) {
       await handleResponse(error)
     })
 
-  logger.response.info('proxy stream start.')
+  logger.response.info('proxy stream starts.')
   return new Response(responseStream.readable, { status: 200, statusText: 'ok', headers })
 }

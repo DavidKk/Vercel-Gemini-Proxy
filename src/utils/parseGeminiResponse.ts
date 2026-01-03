@@ -26,17 +26,23 @@ export interface GeminiResponse {
  * @param response The raw JSON response from the Gemini API.
  * @returns The generated text content.
  */
-export function parseGeminiResponse(response: GeminiResponse): string {
-  if (!response.candidates || response.candidates.length === 0) {
-    return ''
-  }
+export function parseGeminiResponse(response: GeminiResponse | GeminiResponse[]): string {
+  const responses = Array.isArray(response) ? response : [response]
 
-  // Usually we care about the first candidate
-  const candidate = response.candidates[0]
+  return responses
+    .map((res) => {
+      if (!res.candidates || res.candidates.length === 0) {
+        return ''
+      }
 
-  if (!candidate.content || !candidate.content.parts) {
-    return ''
-  }
-
-  return candidate.content.parts.map((part) => part.text || '').join('')
+      return res.candidates
+        .map((candidate) => {
+          if (!candidate.content || !candidate.content.parts) {
+            return ''
+          }
+          return candidate.content.parts.map((part) => part.text || '').join('')
+        })
+        .join('')
+    })
+    .join('')
 }

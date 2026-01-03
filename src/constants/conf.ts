@@ -6,4 +6,4 @@ export const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-headers': '*',
 }
 
-export const TIMEOUT = 10e3
+export const TIMEOUT = 60e3
