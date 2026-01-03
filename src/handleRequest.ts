@@ -6,6 +6,7 @@ import { type WebWritableStream, WritableStream } from './libs/TransformStream'
 import type { Message } from './types/message'
 import { convertStringToUint8Array } from './utils/convertStringToUint8Array'
 import { getContentLength } from './utils/getContentLength'
+import type { GeminiResponse } from './utils/parseGeminiResponse'
 import { parseGeminiResponse } from './utils/parseGeminiResponse'
 import { pickHeaders } from './utils/pickHeaders'
 
@@ -210,7 +211,7 @@ export async function handleRequest(context: Context) {
       if (response.ok) {
         try {
           const data = await response.json()
-          const parsed = parseGeminiResponse(data)
+          const parsed = parseGeminiResponse(data as GeminiResponse)
 
           const writer = responseStream.writable.getWriter()
           await writer.ready
