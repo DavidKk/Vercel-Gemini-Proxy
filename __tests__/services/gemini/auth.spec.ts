@@ -1,4 +1,4 @@
-import { type AuthEnv, parseProxyAuthHeaders, resolveUpstreamAuth } from '@/services/gemini/auth'
+import { type AuthEnv, parseProxyAuthHeaders, resolveMcpAuth, resolveUpstreamAuth } from '@/services/gemini/auth'
 
 function headers(init?: Record<string, string>) {
   return new Headers(init)
@@ -113,5 +113,45 @@ describe('resolveUpstreamAuth', () => {
       mode: 'proxy',
       geminiApiKey: 'server-gemini-key',
     })
+  })
+})
+
+describe('resolveMcpAuth', () => {
+  const envConfigured: AuthEnv = {
+    proxyAuthHeaders: [{ name: 'X-API-KEY', value: 'proxy-secret' }],
+    geminiApiKey: 'server-gemini-key',
+  }
+
+  it('accepts matching proxy headers', () => {
+    expect(resolveMcpAuth(headers({ 'x-api-key': 'proxy-secret' }), envConfigured)).toEqual({
+      ok: true,
+      mode: 'proxy',
+      geminiApiKey: 'server-gemini-key',
+    })
+  })
+
+  it('rejects Gemini key passthrough even when valid for REST', () => {
+    expect(resolveMcpAuth(headers({ 'x-goog-api-key': 'client-key' }), envConfigured)).toEqual({
+      ok: false,
+      status: 401,
+      message: 'No permission',
+    })
+  })
+
+  it('returns 503 when PROXY_AUTH_HEADERS is not configured', () => {
+    expect(resolveMcpAuth(headers({ 'x-goog-api-key': 'client-key' }), { proxyAuthHeaders: [], geminiApiKey: 'k' })).toEqual({
+      ok: false,
+      status: 503,
+      message: 'MCP requires PROXY_AUTH_HEADERS (proxy mode)',
+    })
+  })
+
+  it('returns 503 when proxy matches but GEMINI_API_KEY missing', () => {
+    expect(
+      resolveMcpAuth(headers({ 'X-API-KEY': 'proxy-secret' }), {
+        proxyAuthHeaders: [{ name: 'X-API-KEY', value: 'proxy-secret' }],
+        geminiApiKey: '',
+      })
+    ).toEqual({ ok: false, status: 503, message: 'Server Gemini API key is not configured' })
   })
 })

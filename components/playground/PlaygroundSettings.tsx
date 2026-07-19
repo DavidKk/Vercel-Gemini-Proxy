@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
+import { ScrollArea } from '@/components/ScrollArea'
 import type { PlaygroundSettings } from '@/lib/playground/types'
 
 type PlaygroundSettingsProps = {
@@ -41,7 +42,7 @@ export function PlaygroundSettingsPanel(props: PlaygroundSettingsProps) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 overflow-y-auto px-4 py-6">
+    <ScrollArea className="min-h-0 flex-1" scrollClassName="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
       <section className="border border-border bg-surface p-5">
         <h2 className="font-display text-sm font-semibold tracking-tight text-primary">Proxy credentials</h2>
         <p className="mt-1 text-xs text-muted">Stored only in this browser (localStorage). Requests always go through this proxy.</p>
@@ -77,6 +78,6 @@ export function PlaygroundSettingsPanel(props: PlaygroundSettingsProps) {
           </p>
         ) : null}
       </section>
-    </div>
+    </ScrollArea>
   )
 }

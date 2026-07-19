@@ -41,7 +41,7 @@ export default function RootLayout(props: { children: ReactNode }) {
     <html lang="en" className={`h-full ${display.variable} ${sans.variable}`}>
       <Analytics />
       <SpeedInsights />
-      <body className="h-full bg-canvas font-sans text-primary antialiased">
+      <body className="h-full w-full overflow-hidden bg-canvas font-sans text-primary antialiased">
         <Script id="suppress-abort-errors" strategy="beforeInteractive">
           {SUPPRESS_ABORT_ERRORS_SCRIPT}
         </Script>

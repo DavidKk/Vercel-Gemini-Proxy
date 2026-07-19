@@ -333,7 +333,7 @@ export function PlaygroundApp() {
   const { registerSegment, activeSegmentId, scrollToSegment } = useChatRail(listRef, segmentIds)
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-canvas">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
       <PlaygroundHeader variant="chat" onClear={handleRequestClear} clearDisabled={messages.length === 0} />
 
       <PlaygroundChatShell

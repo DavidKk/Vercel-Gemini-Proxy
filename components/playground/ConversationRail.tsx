@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 
+import { ScrollArea } from '@/components/ScrollArea'
 import { type ChatRailSegment, resolveRailBarWidthPercent } from '@/lib/playground/chat-rail'
 
 import { RailPreviewCard } from './RailPreviewCard'
@@ -47,10 +48,13 @@ export function ConversationRail(props: ConversationRailProps) {
   }
 
   return (
-    <aside
-      className="flex h-full min-h-0 w-[1.625rem] shrink-0 flex-col items-stretch overflow-y-auto overscroll-contain pl-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:w-8"
-      aria-label="Conversation rail"
-      onMouseLeave={() => setHoverIndex(null)}
+    <ScrollArea
+      className="h-full min-h-0 w-[1.625rem] shrink-0 md:w-8"
+      scrollClassName="flex h-full min-h-0 flex-col items-stretch overscroll-contain pl-1.5"
+      scrollProps={{
+        'aria-label': 'Conversation rail',
+        onMouseLeave: () => setHoverIndex(null),
+      }}
     >
       <div className="my-auto flex w-full flex-col items-stretch gap-2.5 py-3">
         {segments.map((segment, index) => {
@@ -68,7 +72,7 @@ export function ConversationRail(props: ConversationRailProps) {
           )
         })}
       </div>
-    </aside>
+    </ScrollArea>
   )
 }
 

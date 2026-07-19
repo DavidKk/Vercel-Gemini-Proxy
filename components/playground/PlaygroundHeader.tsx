@@ -3,6 +3,7 @@
 import Link from 'next/link'
 
 import { BrandLogo } from '@/components/BrandLogo'
+import { McpHeaderButton } from '@/components/McpDialog'
 import { Tooltip } from '@/components/Tooltip'
 
 type ChatHeaderProps = {
@@ -18,23 +19,28 @@ type SettingsHeaderProps = {
 type PlaygroundHeaderProps = ChatHeaderProps | SettingsHeaderProps
 
 export function PlaygroundHeader(props: PlaygroundHeaderProps) {
-  const headerClass = 'flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur-sm'
+  const headerClass = 'flex h-14 w-full shrink-0 items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur-sm'
 
   if (props.variant === 'settings') {
     return (
       <header className={headerClass}>
         <div className="flex min-w-0 items-center gap-2.5">
-          <BrandLogo size={28} className="shrink-0 shadow-sm ring-1 ring-border/60" />
+          <Link href="/" aria-label="Home" className="shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+            <BrandLogo size={28} className="shadow-sm ring-1 ring-border/60" />
+          </Link>
           <div className="min-w-0 leading-tight">
             <h1 className="font-display text-sm font-semibold tracking-tight text-primary">Settings</h1>
             <p className="text-[11px] text-muted">API key · localStorage only</p>
           </div>
         </div>
-        <Tooltip content="Back to chat" placement="bottom">
-          <Link href="/chat" aria-label="Back to chat" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-subtle hover:bg-canvas">
-            <CloseIcon />
-          </Link>
-        </Tooltip>
+        <div className="flex items-center gap-2">
+          <McpHeaderButton />
+          <Tooltip content="Back to chat" placement="bottom">
+            <Link href="/chat" aria-label="Back to chat" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-subtle hover:bg-canvas">
+              <CloseIcon />
+            </Link>
+          </Tooltip>
+        </div>
       </header>
     )
   }
@@ -42,15 +48,16 @@ export function PlaygroundHeader(props: PlaygroundHeaderProps) {
   return (
     <header className={headerClass}>
       <div className="flex min-w-0 items-center gap-2.5">
-        <BrandLogo size={28} className="shrink-0 shadow-sm ring-1 ring-border/60" />
+        <Link href="/" aria-label="Home" className="shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+          <BrandLogo size={28} className="shadow-sm ring-1 ring-border/60" />
+        </Link>
         <div className="min-w-0 leading-tight">
-          <Link href="/" className="font-display text-sm font-semibold tracking-tight text-primary hover:text-brand">
-            Gemini Relay
-          </Link>
+          <p className="font-display text-sm font-semibold tracking-tight text-primary">Gemini Relay</p>
           <p className="text-[11px] text-muted">Debug proxy · local demo</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <McpHeaderButton />
         <Tooltip content={props.clearDisabled ? 'Nothing to clear' : 'Clear chat'} placement="bottom">
           <button
             type="button"

@@ -2,14 +2,14 @@
 
 /**
  * Scroll container with hidden native scrollbar and a 2px position indicator (non-draggable).
- * Follows ui-interaction-skills Options Panel Scroll / scroll-overflow guidance.
+ * Supports vertical (default) and horizontal overflow.
  */
 import { forwardRef, type HTMLAttributes, type ReactNode, type UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-/** Width of the faux scrollbar track in CSS pixels */
+/** Thickness of the faux scrollbar track in CSS pixels */
 const INDICATOR_TRACK_PX = 2
 
-/** Minimum thumb height when content overflows */
+/** Minimum thumb size when content overflows */
 const MIN_THUMB_PX = 2
 
 type ScrollAreaProps = {
@@ -20,9 +20,13 @@ type ScrollAreaProps = {
   scrollClassName?: string
   /** Extra attributes for the scroll container */
   scrollProps?: Omit<HTMLAttributes<HTMLDivElement>, 'className' | 'children' | 'ref' | 'style'>
+  /** Scroll axis for the custom indicator. Default: vertical. */
+  orientation?: 'vertical' | 'horizontal'
+  /** Classes on the indicator thumb (e.g. `bg-white/25` on dark panels). */
+  indicatorClassName?: string
 }
 
-type ThumbState = { top: number; height: number }
+type ThumbState = { offset: number; size: number }
 
 function thumbsEqual(a: ThumbState | null, b: ThumbState | null): boolean {
   if (a === null && b === null) {
@@ -31,12 +35,13 @@ function thumbsEqual(a: ThumbState | null, b: ThumbState | null): boolean {
   if (a === null || b === null) {
     return false
   }
-  return a.top === b.top && a.height === b.height
+  return a.offset === b.offset && a.size === b.size
 }
 
 export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function ScrollArea(props, forwardedRef) {
-  const { children, className, scrollClassName, scrollProps } = props
+  const { children, className, scrollClassName, scrollProps, orientation = 'vertical', indicatorClassName = 'bg-border' } = props
   const { onScroll: userOnScroll, ...restScrollProps } = scrollProps ?? {}
+  const horizontal = orientation === 'horizontal'
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const lastThumbRef = useRef<ThumbState | null | undefined>(undefined)
@@ -70,16 +75,30 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
       commitThumb(null)
       return
     }
+
+    if (horizontal) {
+      const { scrollWidth, clientWidth, scrollLeft } = el
+      if (scrollWidth <= clientWidth) {
+        commitThumb(null)
+        return
+      }
+      const size = Math.max(MIN_THUMB_PX, Math.round((clientWidth / scrollWidth) * clientWidth))
+      const maxScroll = scrollWidth - clientWidth
+      const offset = maxScroll <= 0 ? 0 : Math.round((scrollLeft / maxScroll) * Math.max(0, clientWidth - size))
+      commitThumb({ offset, size })
+      return
+    }
+
     const { scrollHeight, clientHeight, scrollTop } = el
     if (scrollHeight <= clientHeight) {
       commitThumb(null)
       return
     }
-    const thumbHeight = Math.max(MIN_THUMB_PX, Math.round((clientHeight / scrollHeight) * clientHeight))
+    const size = Math.max(MIN_THUMB_PX, Math.round((clientHeight / scrollHeight) * clientHeight))
     const maxScroll = scrollHeight - clientHeight
-    const thumbTop = maxScroll <= 0 ? 0 : Math.round((scrollTop / maxScroll) * Math.max(0, clientHeight - thumbHeight))
-    commitThumb({ top: thumbTop, height: thumbHeight })
-  }, [commitThumb])
+    const offset = maxScroll <= 0 ? 0 : Math.round((scrollTop / maxScroll) * Math.max(0, clientHeight - size))
+    commitThumb({ offset, size })
+  }, [commitThumb, horizontal])
 
   const scheduleSyncThumb = useCallback(() => {
     if (rafSyncRef.current !== 0) {
@@ -124,9 +143,9 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     }
   }, [scheduleSyncThumb])
 
-  const wrapperClass = ['relative flex min-h-0 flex-col overflow-hidden', className].filter(Boolean).join(' ')
-  // flex-1 + min-h-0 keeps this viewport inside the parent bound so overflow scrolls here.
-  const scrollClass = ['custom-scroll min-h-0 flex-1 overflow-auto', scrollClassName].filter(Boolean).join(' ')
+  const wrapperClass = [horizontal ? 'relative min-w-0 w-full overflow-hidden' : 'relative flex min-h-0 flex-col overflow-hidden', className].filter(Boolean).join(' ')
+
+  const scrollClass = ['custom-scroll', horizontal ? 'min-w-0 overflow-x-auto overflow-y-hidden' : 'min-h-0 flex-1 overflow-auto', scrollClassName].filter(Boolean).join(' ')
 
   return (
     <div className={wrapperClass}>
@@ -134,9 +153,15 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
         {children}
       </div>
       {thumb ? (
-        <div className="pointer-events-none absolute bottom-0 right-0.5 top-0 z-10" style={{ width: INDICATOR_TRACK_PX }} aria-hidden>
-          <div className="absolute left-0 rounded-full bg-border" style={{ width: INDICATOR_TRACK_PX, height: thumb.height, top: thumb.top }} />
-        </div>
+        horizontal ? (
+          <div className="pointer-events-none absolute bottom-0.5 left-0 right-0 z-10" style={{ height: INDICATOR_TRACK_PX }} aria-hidden>
+            <div className={`absolute top-0 rounded-full ${indicatorClassName}`} style={{ height: INDICATOR_TRACK_PX, width: thumb.size, left: thumb.offset }} />
+          </div>
+        ) : (
+          <div className="pointer-events-none absolute bottom-0 right-0.5 top-0 z-10" style={{ width: INDICATOR_TRACK_PX }} aria-hidden>
+            <div className={`absolute left-0 rounded-full ${indicatorClassName}`} style={{ width: INDICATOR_TRACK_PX, height: thumb.size, top: thumb.offset }} />
+          </div>
+        )
       ) : null}
     </div>
   )

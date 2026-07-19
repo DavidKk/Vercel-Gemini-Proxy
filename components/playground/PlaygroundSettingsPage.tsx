@@ -34,7 +34,7 @@ export function PlaygroundSettingsPage() {
 
   if (!hydrated) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-canvas">
+      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
         <PlaygroundHeader variant="settings" />
         <SettingsFormSkeleton />
       </div>
@@ -42,7 +42,7 @@ export function PlaygroundSettingsPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-canvas">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
       <PlaygroundHeader variant="settings" />
       <PlaygroundSettingsPanel settings={settings} onSave={handleSave} />
     </div>

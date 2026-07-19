@@ -111,3 +111,29 @@ export function resolveUpstreamAuth(headers: Headers, searchParams: URLSearchPar
 
   return { ok: false, status: 401, message: 'No permission' }
 }
+
+/**
+ * Auth for HTTP MCP (`/api/mcp`).
+ * Proxy headers only — never accepts client Gemini key passthrough.
+ * Requires `PROXY_AUTH_HEADERS` configured on the server.
+ */
+export function resolveMcpAuth(headers: Headers, env: AuthEnv): UpstreamAuthResult {
+  const pairs = env.proxyAuthHeaders
+  if (pairs.length === 0) {
+    return {
+      ok: false,
+      status: 503,
+      message: 'MCP requires PROXY_AUTH_HEADERS (proxy mode)',
+    }
+  }
+
+  if (!requestHasAnyProxyHeader(headers, pairs) || !requestMatchesAllProxyHeaders(headers, pairs)) {
+    return { ok: false, status: 401, message: 'No permission' }
+  }
+
+  if (!env.geminiApiKey) {
+    return { ok: false, status: 503, message: 'Server Gemini API key is not configured' }
+  }
+
+  return { ok: true, mode: 'proxy', geminiApiKey: env.geminiApiKey }
+}
