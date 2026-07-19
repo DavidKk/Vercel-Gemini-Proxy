@@ -131,7 +131,7 @@ export default function HomePage() {
 
               <h3 className="font-display mt-6 text-sm font-semibold text-primary">Proxy mode</h3>
               <p className="mt-1 text-sm text-muted">
-                Server holds <code className="text-primary">GEMINI_API_KEY</code>; callers send headers from <code className="text-primary">PROXY_AUTH_HEADERS</code> (e.g.{' '}
+                Server holds <code className="text-primary">GEMINI_API_KEYS</code>; callers send headers from <code className="text-primary">PROXY_AUTH_HEADERS</code> (e.g.{' '}
                 <code className="text-primary">X-API-KEY</code>).
               </p>
               <CodeBlock tone="canvas" label="curl">{`curl "$HOST/api/v1beta/models" -H "X-API-KEY: <secret>"`}</CodeBlock>

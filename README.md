@@ -15,7 +15,7 @@ Due to network conditions and geographical locations, access to the Gemini API c
 - This service must have its own domain name. Without a domain name, requests cannot be sent. Also, please try to set your DNS resolution in a region where Gemini allows access for successful connectivity.
 - The project requires a `Gemini API Token`. Please set up and use your own token, and refrain from using tokens from others to prevent unauthorized use of the service.
 - If the `role` of the last or the first message in the message context is not `user`, the error `Please ensure that multiturn requests ends with a user role or a function response.` may occur. Therefore, if the `role` of the first message is not `user`, the service will automatically delete the first (ie. the first) message. If the `role` of the last message is not user, an error will be reported and the message will not be sent to Gemini.
-- Credentials: either **passthrough** (`?key=` or `x-goog-api-key` with your Gemini key) or **proxy mode** (custom headers from env `PROXY_AUTH_HEADERS`, server injects env `GEMINI_API_KEY`). Path must be `/api/v1`, `/api/v1beta`, or `/api/v1beta2`. Missing credential/path → `401`. Proxy mode without `GEMINI_API_KEY` → `503`. Empty JSON body on POST/PUT/PATCH → `403`. GET (e.g. list models) does not require a body.
+- Credentials: either **passthrough** (`?key=` or `x-goog-api-key` with your Gemini key) or **proxy mode** (custom headers from env `PROXY_AUTH_HEADERS`, server injects a key from env `GEMINI_API_KEYS`). Path must be `/api/v1`, `/api/v1beta`, or `/api/v1beta2`. Missing credential/path → `401`. Proxy mode without `GEMINI_API_KEYS` → `503`. Empty JSON body on POST/PUT/PATCH → `403`. GET (e.g. list models) does not require a body.
 - The service returns `200` immediately and streams Gemini's reply. Route `maxDuration` and business timeout are **120 seconds** (enough for typical Agent streams on Hobby with Fluid Compute).
 - Model IDs are chosen by the client in the URL (transparent proxy). Prefer current Stable Flash models such as `gemini-2.5-flash`.
 - You can check the log situation through the Vercel console Log.
@@ -56,7 +56,7 @@ Proxy mode (server holds the Gemini key; callers send headers from `PROXY_AUTH_H
 ```bash
 # Set on Vercel / .env (example):
 # PROXY_AUTH_HEADERS='{"X-API-KEY":"<secret>"}'
-# GEMINI_API_KEY=...
+# GEMINI_API_KEYS='["..."]'
 $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models" \
   -H "X-API-KEY: <secret>" \
   -H "x-vercel-protection-bypass: $VERCEL_SECRET"
@@ -68,7 +68,9 @@ $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models" \
 
 Apply for a Google app, add Gemini, and get API keys.
 
-**GEMINI_API_KEY** (server env): Gemini key injected upstream in proxy mode
+**GEMINI_API_KEYS** (server env): JSON array of Gemini keys for proxy mode (one or more). With Vercel KV and ≥2 keys, select least total tokens today (UTC)
+
+**GEMINI_RELAY_KV_REST_API_URL** / **GEMINI_RELAY_KV_REST_API_TOKEN** (optional): Vercel KV REST credentials for rotation counters (not `*_READ_ONLY_TOKEN`, not `*_KV_URL` / `*_REDIS_URL`)
 
 **PROXY_AUTH_HEADERS** (server env): JSON object of required headers (e.g. `{"X-API-KEY":"..."}`). All must match (AND). Extra headers can be added if desired. Header names are case-insensitive.
 

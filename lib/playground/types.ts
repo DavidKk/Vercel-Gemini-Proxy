@@ -6,6 +6,14 @@ export type PlaygroundImage = {
   dataUrl: string
 }
 
+/** Parsed from Gemini `usageMetadata` on generate/stream responses. */
+export type PlaygroundUsageMetadata = {
+  promptTokenCount: number
+  candidatesTokenCount: number
+  totalTokenCount: number
+  thoughtsTokenCount?: number
+}
+
 export type PlaygroundMessage = {
   id: string
   role: 'user' | 'assistant'
@@ -14,6 +22,8 @@ export type PlaygroundMessage = {
   image?: PlaygroundImage
   /** Grounding sources from Google Search (assistant only). */
   sources?: PlaygroundGroundingSource[]
+  /** Token usage for this assistant turn (from chunks that include usageMetadata). */
+  usage?: PlaygroundUsageMetadata
   createdAt: number
 }
 

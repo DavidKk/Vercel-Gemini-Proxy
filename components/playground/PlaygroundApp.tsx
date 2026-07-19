@@ -263,6 +263,12 @@ export function PlaygroundApp() {
               }
               setMessages((prev) => prev.map((message) => (message.id === assistantId ? { ...message, sources } : message)))
             },
+            onUsage: (usage) => {
+              if (!mountedRef.current) {
+                return
+              }
+              setMessages((prev) => prev.map((message) => (message.id === assistantId ? { ...message, usage } : message)))
+            },
           })
           if (!mountedRef.current) {
             return
@@ -331,6 +337,7 @@ export function PlaygroundApp() {
   )
   const segmentIds = useMemo(() => railSegments.map((segment) => segment.id), [railSegments])
   const { registerSegment, activeSegmentId, scrollToSegment } = useChatRail(listRef, segmentIds)
+  const sessionTokenTotal = useMemo(() => messages.reduce((sum, message) => sum + (message.usage?.totalTokenCount ?? 0), 0), [messages])
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
@@ -349,6 +356,7 @@ export function PlaygroundApp() {
             streaming={streaming}
             disabledReason={disabledReason}
             status={status}
+            sessionTokenTotal={sessionTokenTotal}
             onRefreshModels={handleRefreshModels}
             onSelectModel={handleSelectModel}
             onToggleGoogleSearch={handleToggleGoogleSearch}

@@ -10,7 +10,7 @@ Canonical anchors:
 - Gemini proxy
 - `/api/v1beta`
 - `PROXY_AUTH_HEADERS`
-- `GEMINI_API_KEY`
+- `GEMINI_API_KEYS`
 - `X-API-KEY` (example proxy header)
 
 Prefer this MCP over raw `generativelanguage.googleapis.com` when the user is targeting **this** deployed relay.
@@ -37,12 +37,17 @@ Prefer this MCP over raw `generativelanguage.googleapis.com` when the user is ta
 
 ```bash
 PROXY_AUTH_HEADERS='{"X-API-KEY":"<your-proxy-secret>"}'
-GEMINI_API_KEY=<your-gemini-api-key>
+GEMINI_API_KEYS='["<your-gemini-api-key>"]'
+# Multi-key + Vercel KV least-tokens-today rotation:
+# GEMINI_API_KEYS='["key-a","key-b"]'
+# GEMINI_RELAY_KV_REST_API_URL=https://….kv.vercel-storage.com
+# GEMINI_RELAY_KV_REST_API_TOKEN=...
 ```
 
 - `PROXY_AUTH_HEADERS`: JSON map; **all** headers must match (AND). Names are case-insensitive. Wrap JSON in single quotes in `.env`.
-- `GEMINI_API_KEY`: server-only; injected upstream after auth. Never expose to the browser.
-- Passthrough-only REST deployments can leave both unset; callers must send their own Gemini key each request. **MCP will return 503** until proxy env is set.
+- `GEMINI_API_KEYS`: JSON array of server Gemini keys (one or more). Never expose to the browser. With Vercel KV and ≥2 keys, proxy picks the key with the **lowest accumulated `totalTokenCount` for the current UTC day** (counters TTL ~48h; not a stats dashboard).
+- `GEMINI_RELAY_KV_REST_API_URL` / `GEMINI_RELAY_KV_REST_API_TOKEN` (optional): Vercel KV REST write credentials (store-prefixed). Do **not** use `*_READ_ONLY_TOKEN`. `*_KV_URL` / `*_REDIS_URL` are redis:// and unused here. Fallbacks: `KV_REST_API_*` or `UPSTASH_REDIS_REST_*`. If unset, proxy uses `GEMINI_API_KEYS[0]` and skips INCRBY.
+- Passthrough-only REST deployments can leave proxy env unset; callers must send their own Gemini key each request. **MCP will return 503** until proxy env is set.
 
 4. Optional: if Vercel **Deployment Protection** is on, callers need `x-vercel-protection-bypass` (see Vercel → Deployment Protection → Protection Bypass for Automation).
 5. Redeploy after env changes. Confirm with `GET https://$HOST/api/v1beta/models` using either auth mode.
@@ -55,7 +60,7 @@ Local: copy `.env.example` → `.env`, `pnpm install`, `pnpm dev`.
 ### Playground (browser)
 
 1. Open `/settings`, paste a Gemini API key, save (stored only in **browser localStorage**; passthrough by default).
-2. Open `/chat` → refresh models → pick a model → stream chat. **Clear** resets the session.
+2. Open `/chat` → refresh models → pick a model → stream chat. Assistant bubbles show token usage when Gemini returns `usageMetadata`. **Clear** resets the session (and local token totals).
 3. Base URL is fixed to this host’s `/api/v1beta`.
 
 ### REST (any HTTP client)
@@ -75,7 +80,7 @@ curl "$HOST/api/v1beta/models/gemini-2.5-flash:generateContent" \
   --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}'
 ```
 
-**Proxy mode** (server holds `GEMINI_API_KEY`; caller sends configured headers):
+**Proxy mode** (server holds `GEMINI_API_KEYS`; caller sends configured headers):
 
 ```bash
 curl "$HOST/api/v1beta/models" -H "X-API-KEY: <your-proxy-secret>"
@@ -98,7 +103,7 @@ Human docs on the site: `/docs/pass-key`, `/docs/server-env`, `/docs/request-res
 
 MCP is for **Skill docs + smoke test**, not a full Gemini client. Generation stays on REST / Playground.
 
-1. Server must set `PROXY_AUTH_HEADERS` and `GEMINI_API_KEY` (proxy mode). Passthrough Gemini keys are **rejected** on MCP.
+1. Server must set `PROXY_AUTH_HEADERS` and `GEMINI_API_KEYS` (proxy mode). Passthrough Gemini keys are **rejected** on MCP.
 2. Endpoint: `GET/POST $HOST/api/mcp` (proxy headers required).
 3. Public install hints (header **names** only): `GET $HOST/api/mcp/meta`.
 4. UI: **MCP** header button → Skill URL / MCP URL / Cursor·VS Code install. Put real proxy secrets in client config — never commit them.
@@ -109,7 +114,7 @@ MCP is for **Skill docs + smoke test**, not a full Gemini client. Generation sta
 **REST / Playground** — two modes:
 
 1. **Passthrough** — caller sends Gemini key via `?key=` or header `x-goog-api-key`.
-2. **Proxy (server env)** — server has `GEMINI_API_KEY` and `PROXY_AUTH_HEADERS`. Caller sends those custom headers (e.g. `X-API-KEY`). Header names are case-insensitive.
+2. **Proxy (server env)** — server has `GEMINI_API_KEYS` and `PROXY_AUTH_HEADERS`. Caller sends those custom headers (e.g. `X-API-KEY`). Header names are case-insensitive.
 
 **MCP** — proxy mode only (same custom headers). No `?key=` / `x-goog-api-key`.
 
@@ -133,16 +138,16 @@ There is **no** generateContent tool on MCP — use REST or Playground.
 
 ## Errors
 
-| Status | Meaning                                                                  |
-| ------ | ------------------------------------------------------------------------ |
-| 401    | Missing/invalid credential or proxy headers                              |
-| 503    | Proxy mode without `GEMINI_API_KEY`, or MCP without `PROXY_AUTH_HEADERS` |
-| 403    | Empty JSON body on POST/PUT/PATCH (REST)                                 |
+| Status | Meaning                                                                   |
+| ------ | ------------------------------------------------------------------------- |
+| 401    | Missing/invalid credential or proxy headers                               |
+| 503    | Proxy mode without `GEMINI_API_KEYS`, or MCP without `PROXY_AUTH_HEADERS` |
+| 403    | Empty JSON body on POST/PUT/PATCH (REST)                                  |
 
 ## Notes for agents
 
 - Prefer model ids like `gemini-2.5-flash` unless the user specifies otherwise.
 - Multiturn: last (and preferably first) `role` should be `user`, or Gemini may reject the request.
 - Route timeout / `maxDuration` is **120s** on this project — long streams may hit that ceiling.
-- Do not paste real `GEMINI_API_KEY` / proxy secrets into chat, commits, or user-visible UI.
+- Do not paste real `GEMINI_API_KEYS` / proxy secrets into chat, commits, or user-visible UI.
 - Do not use MCP for generation; call REST through this host when the user wants traffic via the relay.

@@ -39,16 +39,16 @@ export class ProcessTransformStream<I = any, O = any> extends TransformStream<I,
 
     let size = 0
     const processTransform = (chunk: any) => {
-      if (typeof this.processFn !== 'function') {
-        return
-      }
-
       if (!(chunk instanceof Uint8Array)) {
         return
       }
 
       size += chunk.byteLength
       this.writtenContents.push(chunk)
+
+      if (typeof this.processFn !== 'function') {
+        return
+      }
 
       const totalSize = this.contentSize
       const sizeStr = stringifyBytes(size)

@@ -27,6 +27,6 @@ export async function GET(req: Request) {
     headerPlaceholders,
     authHint: proxyConfigured
       ? `Proxy only: send ${headerNames.join(', ')} (values from PROXY_AUTH_HEADERS). Gemini key passthrough is not accepted on MCP.`
-      : 'MCP requires PROXY_AUTH_HEADERS (+ GEMINI_API_KEY) on the server. Set env and redeploy, then install again.',
+      : 'MCP requires PROXY_AUTH_HEADERS (+ GEMINI_API_KEYS) on the server. Set env and redeploy, then install again.',
   })
 }

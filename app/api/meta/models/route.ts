@@ -4,7 +4,7 @@ import { getPublicModelsCatalog, MODELS_CATALOG_REVALIDATE_SECONDS } from '@/ser
 
 /**
  * Public model list for the API dialog.
- * Uses server GEMINI_API_KEY when set; never exposes the key. Cached ~1 day.
+ * Uses server GEMINI_API_KEYS when set; never exposes the key. Cached ~1 day.
  */
 export async function GET() {
   const catalog = await getPublicModelsCatalog()

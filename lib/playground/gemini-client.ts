@@ -1,5 +1,5 @@
 import { stripModelPrefix } from './storage'
-import type { GeminiContent, GeminiPart, PlaygroundImage } from './types'
+import type { GeminiContent, GeminiPart, PlaygroundImage, PlaygroundUsageMetadata } from './types'
 
 /** Strip `data:<mime>;base64,` prefix from a data URL. */
 export function dataUrlToBase64(dataUrl: string): string {
@@ -93,6 +93,50 @@ export function extractTextFromChunk(chunk: unknown): string {
   }
 
   return parts.map((part) => part.text ?? '').join('')
+}
+
+function asNonNegativeInt(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return null
+  }
+  return Math.floor(value)
+}
+
+/** Parse Gemini `usageMetadata` from a stream/generate JSON object. */
+export function extractUsageMetadata(chunk: unknown): PlaygroundUsageMetadata | null {
+  if (!chunk || typeof chunk !== 'object') {
+    return null
+  }
+
+  const raw = (chunk as { usageMetadata?: Record<string, unknown> }).usageMetadata
+  if (!raw || typeof raw !== 'object') {
+    return null
+  }
+
+  const promptTokenCount = asNonNegativeInt(raw.promptTokenCount)
+  const candidatesTokenCount = asNonNegativeInt(raw.candidatesTokenCount)
+  const totalTokenCount = asNonNegativeInt(raw.totalTokenCount)
+  if (promptTokenCount === null || candidatesTokenCount === null || totalTokenCount === null) {
+    return null
+  }
+
+  const thoughtsTokenCount = asNonNegativeInt(raw.thoughtsTokenCount)
+  return {
+    promptTokenCount,
+    candidatesTokenCount,
+    totalTokenCount,
+    ...(thoughtsTokenCount !== null ? { thoughtsTokenCount } : {}),
+  }
+}
+
+/** Compact footer line for assistant bubbles. */
+export function formatUsageLabel(usage: PlaygroundUsageMetadata): string {
+  const n = (value: number) => value.toLocaleString('en-US')
+  const parts = [`${n(usage.totalTokenCount)} tokens`, `in ${n(usage.promptTokenCount)}`, `out ${n(usage.candidatesTokenCount)}`]
+  if (usage.thoughtsTokenCount != null && usage.thoughtsTokenCount > 0) {
+    parts.push(`thoughts ${n(usage.thoughtsTokenCount)}`)
+  }
+  return parts.join(' · ')
 }
 
 export type GroundingSource = {
@@ -225,6 +269,7 @@ export type StreamGenerateOptions = {
   signal?: AbortSignal
   onChunk: (textDelta: string) => void
   onSources?: (sources: GroundingSource[]) => void
+  onUsage?: (usage: PlaygroundUsageMetadata) => void
 }
 
 /** Build generateContent JSON body (contents + optional google_search tool). */
@@ -243,7 +288,7 @@ export function buildStreamGenerateBody(contents: GeminiContent[], googleSearch 
  * Abort/cancel always resolves normally (never throws AbortError).
  */
 export async function streamGenerateContent(options: StreamGenerateOptions) {
-  const { apiRoot, apiKey, modelId, contents, googleSearch = false, signal, onChunk, onSources } = options
+  const { apiRoot, apiKey, modelId, contents, googleSearch = false, signal, onChunk, onSources, onUsage } = options
   if (signal?.aborted) {
     return
   }
@@ -291,6 +336,12 @@ export async function streamGenerateContent(options: StreamGenerateOptions) {
     const delta = extractTextFromChunk(event)
     if (delta) {
       onChunk(delta)
+    }
+    if (onUsage) {
+      const usage = extractUsageMetadata(event)
+      if (usage) {
+        onUsage(usage)
+      }
     }
     if (!onSources) {
       return

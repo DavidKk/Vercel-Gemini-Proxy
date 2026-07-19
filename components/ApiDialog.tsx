@@ -171,9 +171,9 @@ export function ApiDialog(props: ApiDialogProps) {
                       ? catalogError
                       : catalog?.geminiKeyConfigured
                         ? catalog.source === 'upstream'
-                          ? 'Models from server GEMINI_API_KEY (key not exposed). Cached up to 1 day.'
+                          ? 'Models from server GEMINI_API_KEYS (key not exposed). Cached up to 1 day.'
                           : 'Using fallback model list.'
-                        : 'GEMINI_API_KEY not set — showing default model only.'}
+                        : 'GEMINI_API_KEYS not set — showing default model only.'}
                 </p>
               </div>
 

@@ -8,7 +8,7 @@ export type PublicModelInfo = {
 }
 
 export type PublicModelsCatalog = {
-  /** True when server has GEMINI_API_KEY (value never exposed). */
+  /** True when server has GEMINI_API_KEYS (value never exposed). */
   geminiKeyConfigured: boolean
   models: PublicModelInfo[]
   /** How the list was produced */

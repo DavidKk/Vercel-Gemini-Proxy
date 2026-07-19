@@ -5,7 +5,7 @@ import { getRequestOrigin } from '@/lib/request-origin'
 
 export const metadata: Metadata = {
   title: 'Server env · Gemini Relay',
-  description: 'Call Gemini Relay using PROXY_AUTH_HEADERS and GEMINI_API_KEY on the server.',
+  description: 'Call Gemini Relay using PROXY_AUTH_HEADERS and GEMINI_API_KEYS on the server.',
 }
 
 export default async function DocsServerEnvPage() {

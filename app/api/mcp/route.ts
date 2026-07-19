@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 
 import { loadAuthEnv, resolveMcpAuth } from '@/services/gemini/auth'
+import { pickKeyLeastTokensToday } from '@/services/gemini/keyRotation'
 import { createMcpService, handleMcpJsonRpc, mcpBadRequest, mcpManifestResponse, mcpUnauthorized } from '@/services/mcp/handler'
 
 const service = createMcpService()
@@ -27,9 +28,9 @@ export async function GET(req: NextRequest) {
 
 /** POST /api/mcp — JSON-RPC 2.0 (initialize, tools/*, resources/*). Proxy auth required. */
 export async function POST(req: NextRequest) {
-  const auth = authorize(req)
-  if (!auth.ok) {
-    return authFailure(auth)
+  const authResult = authorize(req)
+  if (!authResult.ok) {
+    return authFailure(authResult)
   }
 
   const body = await req.json().catch(() => null)
@@ -42,5 +43,7 @@ export async function POST(req: NextRequest) {
     return mcpBadRequest('Expected JSON-RPC 2.0 body with method')
   }
 
-  return handleMcpJsonRpc(service, body as { id?: string | number | null; method?: string; params?: unknown }, auth.geminiApiKey)
+  const authEnv = loadAuthEnv()
+  const geminiApiKey = await pickKeyLeastTokensToday(authEnv.geminiApiKeys)
+  return handleMcpJsonRpc(service, body as { id?: string | number | null; method?: string; params?: unknown }, geminiApiKey)
 }

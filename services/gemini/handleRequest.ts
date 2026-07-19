@@ -1,6 +1,7 @@
 import { loadAuthEnv, resolveUpstreamAuth } from '@/services/gemini/auth'
 import { CORS_HEADERS, GOOGLE_GEMINI_API_URL, TIMEOUT } from '@/services/gemini/constants'
 import type { Context } from '@/services/gemini/createContext'
+import { extractTotalTokenCountFromBody, pickKeyLeastTokensToday, recordTokenUsage } from '@/services/gemini/keyRotation'
 import { ProcessTransformStream } from '@/services/gemini/libs/ProcessTransformStream'
 import { createErrorResponse, createException, createResponse } from '@/services/gemini/libs/response'
 import { type WebWritableStream, WritableStream } from '@/services/gemini/libs/TransformStream'
@@ -86,10 +87,18 @@ export async function handleRequest(context: Context) {
     return createErrorResponse('No permission', 401)
   }
 
-  const auth = resolveUpstreamAuth(reqHeaders, searchParams, authEnv)
-  if (!auth.ok) {
-    return createErrorResponse(auth.message, auth.status)
+  const authResult = resolveUpstreamAuth(reqHeaders, searchParams, authEnv)
+  if (!authResult.ok) {
+    return createErrorResponse(authResult.message, authResult.status)
   }
+
+  const auth =
+    authResult.mode === 'proxy'
+      ? {
+          ...authResult,
+          geminiApiKey: await pickKeyLeastTokensToday(authEnv.geminiApiKeys),
+        }
+      : authResult
 
   const needsJsonBody = METHODS_WITH_JSON_BODY.has(method.toUpperCase())
   if (needsJsonBody && !body) {
@@ -286,6 +295,13 @@ export async function handleRequest(context: Context) {
 
       await safeCloseWriter(writer)
       logger.response.info(`Response spent ${((Date.now() - responseStartTime) / 1e3).toFixed(3)} s.`)
+
+      if (auth.mode === 'proxy') {
+        const totalTokens = extractTotalTokenCountFromBody(responseStream.content)
+        if (totalTokens !== null) {
+          void recordTokenUsage(auth.geminiApiKey, totalTokens)
+        }
+      }
     } catch (error) {
       const isAbort =
         (error instanceof Error && error.name === 'AbortError') ||

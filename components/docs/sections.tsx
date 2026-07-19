@@ -34,7 +34,7 @@ export function PassKeyContent(props: { host: string }) {
   const { host } = props
 
   return (
-    <DocsPanel title="Pass your API key" lead="Caller sends a Gemini key on each request. No server GEMINI_API_KEY needed.">
+    <DocsPanel title="Pass your API key" lead="Caller sends a Gemini key on each request. No server GEMINI_API_KEYS needed.">
       <ul className="list-disc space-y-1.5 pl-5 text-[15px] text-muted">
         <li>
           Query: <DocsInlineCode>?key=$GEMINI_API_TOKEN</DocsInlineCode>
@@ -64,11 +64,17 @@ export function ServerEnvContent(props: { host: string }) {
     <DocsPanel title="Use server environment variables" lead="Server holds the Gemini key. Callers only send custom headers. Better for shared deployments.">
       <div className="overflow-hidden rounded-md border border-border bg-canvas">
         <EnvRow name="PROXY_AUTH_HEADERS" body={`JSON headers, all must match. e.g. {"X-API-KEY":"<secret>"}`} />
-        <EnvRow name="GEMINI_API_KEY" body="Injected upstream after headers match. Never expose to the browser." last />
+        <EnvRow name="GEMINI_API_KEYS" body='JSON array of server Gemini keys, e.g. ["keyA"] or ["keyA","keyB"]. Required for proxy mode.' />
+        <EnvRow name="GEMINI_RELAY_KV_REST_API_URL" body="Vercel KV REST URL (store-prefixed). Used with @upstash/redis for rotation counters." />
+        <EnvRow name="GEMINI_RELAY_KV_REST_API_TOKEN" body="Vercel KV write token. Without KV (or with one key), proxy uses keys[0]. Do not use READ_ONLY_TOKEN." last />
       </div>
       <CodeBlock tone="canvas" label=".env" className="mt-5">
         {`PROXY_AUTH_HEADERS='{"X-API-KEY":"<your-proxy-secret>"}'
-GEMINI_API_KEY=<your-gemini-api-key>`}
+GEMINI_API_KEYS='["<your-gemini-api-key>"]'
+# Multi-key + KV (optional):
+# GEMINI_API_KEYS='["key-a","key-b"]'
+# GEMINI_RELAY_KV_REST_API_URL=https://….kv.vercel-storage.com
+# GEMINI_RELAY_KV_REST_API_TOKEN=...`}
       </CodeBlock>
       <CodeBlock tone="canvas" label="curl" className="mt-3">
         {withHost(
@@ -112,7 +118,7 @@ export function RequestResponseContent(props: { host: string }) {
 
       <div className="mt-5 overflow-hidden rounded-md border border-border bg-canvas">
         <ErrorRow code="401" detail="Missing or invalid credential" />
-        <ErrorRow code="503" detail="Proxy headers OK but GEMINI_API_KEY unset; or MCP without PROXY_AUTH_HEADERS" />
+        <ErrorRow code="503" detail="Proxy headers OK but GEMINI_API_KEYS unset; or MCP without PROXY_AUTH_HEADERS" />
         <ErrorRow code="403" detail="Empty body on POST / PUT / PATCH" last />
       </div>
 

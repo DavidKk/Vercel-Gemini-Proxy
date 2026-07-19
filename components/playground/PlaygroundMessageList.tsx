@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import { BrandLogo } from '@/components/BrandLogo'
+import { formatUsageLabel } from '@/lib/playground/gemini-client'
 import type { PlaygroundMessage } from '@/lib/playground/types'
 
 import { ChatMessagesSkeleton } from './PlaygroundSkeletons'
@@ -109,6 +110,7 @@ function MessageBubble(props: { message: PlaygroundMessage; streaming: boolean; 
             </ul>
           </div>
         ) : null}
+        {message.usage ? <p className="text-[11px] tabular-nums text-muted">{formatUsageLabel(message.usage)}</p> : null}
       </div>
     </div>
   )

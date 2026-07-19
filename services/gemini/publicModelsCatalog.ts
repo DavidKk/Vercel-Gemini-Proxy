@@ -91,7 +91,7 @@ async function loadUpstreamCatalog(apiKey: string): Promise<PublicModelsCatalog>
 
 /**
  * Public model catalog for the API dialog.
- * Uses server `GEMINI_API_KEY` only; never returns the key. Cached 1 day when key is set.
+ * Uses server `GEMINI_API_KEYS` only; never returns the key. Cached 1 day when key is set.
  */
 export async function getPublicModelsCatalog(): Promise<PublicModelsCatalog> {
   const { geminiApiKey } = loadAuthEnv()

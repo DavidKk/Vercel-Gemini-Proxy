@@ -3,6 +3,8 @@ import {
   consumeStreamBuffer,
   extractGroundingSources,
   extractTextFromChunk,
+  extractUsageMetadata,
+  formatUsageLabel,
   isAbortError,
   mergeGroundingSources,
   toGeminiContents,
@@ -119,5 +121,32 @@ describe('playground gemini-client helpers', () => {
     const completed = consumeStreamBuffer(partial.rest + '"}]}}]}\n')
     expect(completed.events).toHaveLength(1)
     expect(extractTextFromChunk(completed.events[0])).toBe('在的')
+  })
+
+  it('extracts and formats usageMetadata', () => {
+    expect(extractUsageMetadata({ candidates: [] })).toBeNull()
+    expect(
+      extractUsageMetadata({
+        usageMetadata: {
+          promptTokenCount: 12,
+          candidatesTokenCount: 34,
+          totalTokenCount: 50,
+          thoughtsTokenCount: 4,
+        },
+      })
+    ).toEqual({
+      promptTokenCount: 12,
+      candidatesTokenCount: 34,
+      totalTokenCount: 50,
+      thoughtsTokenCount: 4,
+    })
+    expect(
+      formatUsageLabel({
+        promptTokenCount: 12,
+        candidatesTokenCount: 34,
+        totalTokenCount: 50,
+        thoughtsTokenCount: 4,
+      })
+    ).toBe('50 tokens · in 12 · out 34 · thoughts 4')
   })
 })

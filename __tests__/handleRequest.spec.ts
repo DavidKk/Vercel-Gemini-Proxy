@@ -5,7 +5,7 @@ import type { Message } from '@/services/gemini/types/message'
 
 describe('test handleRequest', () => {
   const originalProxyAuth = process.env.PROXY_AUTH_HEADERS
-  const originalGeminiKey = process.env.GEMINI_API_KEY
+  const originalGeminiKeys = process.env.GEMINI_API_KEYS
 
   afterEach(() => {
     if (originalProxyAuth === undefined) {
@@ -13,10 +13,10 @@ describe('test handleRequest', () => {
     } else {
       process.env.PROXY_AUTH_HEADERS = originalProxyAuth
     }
-    if (originalGeminiKey === undefined) {
-      delete process.env.GEMINI_API_KEY
+    if (originalGeminiKeys === undefined) {
+      delete process.env.GEMINI_API_KEYS
     } else {
-      process.env.GEMINI_API_KEY = originalGeminiKey
+      process.env.GEMINI_API_KEYS = originalGeminiKeys
     }
   })
 
@@ -126,9 +126,9 @@ describe('test handleRequest', () => {
     expect(global.fetch).toHaveBeenCalled()
   })
 
-  it('accepts custom proxy auth headers and injects server GEMINI_API_KEY', async () => {
+  it('accepts custom proxy auth headers and injects server GEMINI_API_KEYS', async () => {
     process.env.PROXY_AUTH_HEADERS = '{"x-a1b2c3d4":"proxy-secret"}'
-    process.env.GEMINI_API_KEY = 'server-gemini-key'
+    process.env.GEMINI_API_KEYS = '["server-gemini-key"]'
     global.fetch = jest.fn().mockImplementation(async () => new Response('ok'))
 
     const request = new Request('https://example.com/api/v1beta/models', {
@@ -146,7 +146,7 @@ describe('test handleRequest', () => {
 
   it('returns 401 for wrong custom proxy auth header value', async () => {
     process.env.PROXY_AUTH_HEADERS = '{"x-a1b2c3d4":"proxy-secret"}'
-    process.env.GEMINI_API_KEY = 'server-gemini-key'
+    process.env.GEMINI_API_KEYS = '["server-gemini-key"]'
 
     const request = new Request('https://example.com/api/v1beta/models', {
       method: 'GET',
@@ -157,9 +157,9 @@ describe('test handleRequest', () => {
     expect(response.status).toBe(401)
   })
 
-  it('returns 503 when proxy auth ok but GEMINI_API_KEY missing', async () => {
+  it('returns 503 when proxy auth ok but GEMINI_API_KEYS missing', async () => {
     process.env.PROXY_AUTH_HEADERS = '{"x-a1b2c3d4":"proxy-secret"}'
-    delete process.env.GEMINI_API_KEY
+    delete process.env.GEMINI_API_KEYS
 
     const request = new Request('https://example.com/api/v1beta/models', {
       method: 'GET',

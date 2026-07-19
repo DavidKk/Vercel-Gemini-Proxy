@@ -161,7 +161,7 @@ export function McpDialog(props: McpDialogProps) {
                 {meta.proxyConfigured ? (
                   <p className="font-mono text-[12px] text-primary">
                     Headers: {meta.headerNames.join(', ')} (replace placeholders in mcp.json)
-                    {meta.geminiKeyConfigured === false ? ' · server GEMINI_API_KEY is not set yet' : ''}
+                    {meta.geminiKeyConfigured === false ? ' · server GEMINI_API_KEYS is not set yet' : ''}
                   </p>
                 ) : (
                   <p className="text-[13px] text-amber-800">

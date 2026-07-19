@@ -15,7 +15,7 @@
 - 此服务必须有自己的域名。如果没有域名，则无法发送请求。此外，请尝试在 Gemini 允许访问的区域中设置您的 DNS 解析，以实现成功的连接。
 - 该项目需要一个 `Gemini API Token`。请设置并使用您自己的令牌，不要使用他人的令牌，以防止未经授权使用该服务。
 - 如果消息上下文最后一条信息或第一条信息 `role` 不为 `user` 时，可能会出现 `Please ensure that multiturn requests ends with a user role or a function response.` 错误。因此若第一条信息 `role` 不为 `user`时，服务会自动删除第一条（即第一条）信息。若最后一条信息 `role` 不为 `user` 时，将会报错不会将信息发送给 `Gemini`。
-- 凭证支持两种模式：**透传**（`?key=` 或 `x-goog-api-key` 带你的 Gemini Key）或 **Proxy 模式**（环境变量 `PROXY_AUTH_HEADERS` 配置的自定义 Header 名/值，由服务端注入 `GEMINI_API_KEY`）。路径需为 `/api/v1`、`/api/v1beta` 或 `/api/v1beta2`。缺凭证/路径 → `401`；Proxy 模式缺 `GEMINI_API_KEY` → `503`。POST/PUT/PATCH 空 body → `403`；GET（如 list models）不要求 body。
+- 凭证支持两种模式：**透传**（`?key=` 或 `x-goog-api-key` 带你的 Gemini Key）或 **Proxy 模式**（环境变量 `PROXY_AUTH_HEADERS` 配置的自定义 Header 名/值，由服务端从 `GEMINI_API_KEYS` 注入 Key）。路径需为 `/api/v1`、`/api/v1beta` 或 `/api/v1beta2`。缺凭证/路径 → `401`；Proxy 模式缺 `GEMINI_API_KEYS` → `503`。POST/PUT/PATCH 空 body → `403`；GET（如 list models）不要求 body。
 - 服务会优先返回 `200` 并以流形式回传。Route `maxDuration` 与业务超时均为 **120 秒**（覆盖常见 Agent 流，Hobby + Fluid Compute 即可）。
 - 模型 ID 由调用方写在 URL 中（透明代理）。推荐使用当前稳定 Flash，例如 `gemini-2.5-flash`。
 - 可以通过 Vercel 控制台 Log 查看日志情况。
@@ -56,7 +56,7 @@ Proxy 模式（服务端持有 Gemini Key；调用方发送 `PROXY_AUTH_HEADERS`
 ```bash
 # 在 Vercel / .env 配置（示例）：
 # PROXY_AUTH_HEADERS='{"X-API-KEY":"<密钥>"}'
-# GEMINI_API_KEY=...
+# GEMINI_API_KEYS='["..."]'
 $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models" \
   -H "X-API-KEY: <密钥>" \
   -H "x-vercel-protection-bypass: $VERCEL_SECRET"
@@ -68,7 +68,9 @@ $ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models" \
 
 申请 Google 应用，添加 Gemini 并获取 API KEY。
 
-**GEMINI_API_KEY**（服务端环境变量）：Proxy 模式下注入上游的 Gemini Key
+**GEMINI_API_KEYS**（服务端环境变量）：Proxy 模式的 Gemini Key 池（JSON 数组，可单 Key）。配合 Vercel KV 且 ≥2 把时按当日（UTC）累计 Token 最少选 Key
+
+**GEMINI_RELAY_KV_REST_API_URL** / **GEMINI_RELAY_KV_REST_API_TOKEN**（可选）：Vercel KV REST 凭证，用于轮询计数（勿用 READ_ONLY_TOKEN；KV_URL / REDIS_URL 不用于本逻辑）
 
 **PROXY_AUTH_HEADERS**（服务端环境变量）：JSON 对象，例如 `{"X-API-KEY":"..."}`；可加多对 Header，全部匹配才通过（AND）。Header 名大小写不敏感。
 

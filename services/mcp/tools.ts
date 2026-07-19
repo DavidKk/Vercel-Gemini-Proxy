@@ -32,7 +32,7 @@ export function createMcpTools(): Record<string, McpTool> {
   return {
     gemini_list_models: {
       name: 'gemini_list_models',
-      description: 'Smoke-test this relay: list Gemini models via v1beta (proxy auth + server GEMINI_API_KEY). Prefer REST/Playground for generateContent.',
+      description: 'Smoke-test this relay: list Gemini models via v1beta (proxy auth + server GEMINI_API_KEYS). Prefer REST/Playground for generateContent.',
       inputSchema: {
         type: 'object',
         properties: {},

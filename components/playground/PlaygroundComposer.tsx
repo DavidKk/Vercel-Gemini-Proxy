@@ -15,6 +15,8 @@ type PlaygroundComposerProps = {
   streaming: boolean
   disabledReason?: string
   status?: string
+  /** Sum of assistant `usage.totalTokenCount` in the current session. */
+  sessionTokenTotal?: number
   onRefreshModels: (force?: boolean) => void
   onSelectModel: (modelId: string) => void
   onToggleGoogleSearch: () => void
@@ -46,6 +48,7 @@ export function PlaygroundComposer(props: PlaygroundComposerProps) {
     streaming,
     disabledReason,
     status,
+    sessionTokenTotal = 0,
     onRefreshModels,
     onSelectModel,
     onToggleGoogleSearch,
@@ -293,7 +296,14 @@ export function PlaygroundComposer(props: PlaygroundComposerProps) {
         </div>
 
         <p className="mt-2 px-1 text-center text-[11px] text-muted">
-          {disabledReason || status || (googleSearch ? 'Web search on · Enter to send · Shift+Enter for newline' : 'Enter to send · Shift+Enter for newline · + to upload image')}
+          {disabledReason ||
+            status ||
+            [
+              sessionTokenTotal > 0 ? `Session ${sessionTokenTotal.toLocaleString('en-US')} tokens` : null,
+              googleSearch ? 'Web search on · Enter to send · Shift+Enter for newline' : 'Enter to send · Shift+Enter for newline · + to upload image',
+            ]
+              .filter(Boolean)
+              .join(' · ')}
         </p>
       </div>
     </div>
