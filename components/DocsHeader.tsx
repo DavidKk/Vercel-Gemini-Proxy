@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 
+import { ApiHeaderButton } from '@/components/ApiDialog'
 import { BrandLogo } from '@/components/BrandLogo'
 import { McpHeaderButton } from '@/components/McpDialog'
 import { Tooltip } from '@/components/Tooltip'
@@ -22,6 +23,7 @@ export function DocsHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <ApiHeaderButton />
         <McpHeaderButton />
         <Tooltip content="Playground" placement="bottom">
           <Link href="/chat" aria-label="Playground" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-subtle hover:bg-canvas">

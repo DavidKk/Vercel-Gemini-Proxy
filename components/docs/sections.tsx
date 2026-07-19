@@ -12,6 +12,10 @@ export const DOCS_DEFAULT_HREF = DOCS_NAV[0].href
 
 const GEMINI_DOCS = 'https://ai.google.dev/api'
 
+function withHost(host: string, template: string): string {
+  return template.replaceAll('$HOST', host || '$HOST')
+}
+
 export function DocsPanel(props: { title: string; lead: string; children: ReactNode }) {
   return (
     <div className="w-full min-w-0 border border-border bg-surface px-5 py-6 sm:px-7 sm:py-7">
@@ -26,7 +30,9 @@ export function DocsInlineCode(props: { children: ReactNode }) {
   return <code className="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-[12px] text-primary">{props.children}</code>
 }
 
-export function PassKeyContent() {
+export function PassKeyContent(props: { host: string }) {
+  const { host } = props
+
   return (
     <DocsPanel title="Pass your API key" lead="Caller sends a Gemini key on each request. No server GEMINI_API_KEY needed.">
       <ul className="list-disc space-y-1.5 pl-5 text-[15px] text-muted">
@@ -39,16 +45,21 @@ export function PassKeyContent() {
       </ul>
       <p className="mt-3 text-[14px] text-muted">Playground uses this mode (key stored in browser localStorage).</p>
       <CodeBlock tone="canvas" label="curl" className="mt-5">
-        {`curl "$HOST/api/v1beta/models?key=$GEMINI_API_TOKEN"
+        {withHost(
+          host,
+          `curl "$HOST/api/v1beta/models?key=$GEMINI_API_TOKEN"
 
 curl "$HOST/api/v1beta/models" \\
-  -H "x-goog-api-key: $GEMINI_API_TOKEN"`}
+  -H "x-goog-api-key: $GEMINI_API_TOKEN"`
+        )}
       </CodeBlock>
     </DocsPanel>
   )
 }
 
-export function ServerEnvContent() {
+export function ServerEnvContent(props: { host: string }) {
+  const { host } = props
+
   return (
     <DocsPanel title="Use server environment variables" lead="Server holds the Gemini key. Callers only send custom headers. Better for shared deployments.">
       <div className="overflow-hidden rounded-md border border-border bg-canvas">
@@ -60,37 +71,48 @@ export function ServerEnvContent() {
 GEMINI_API_KEY=<your-gemini-api-key>`}
       </CodeBlock>
       <CodeBlock tone="canvas" label="curl" className="mt-3">
-        {`curl "$HOST/api/v1beta/models" \\
-  -H "X-API-KEY: <your-proxy-secret>"`}
+        {withHost(
+          host,
+          `curl "$HOST/api/v1beta/models" \\
+  -H "X-API-KEY: <your-proxy-secret>"`
+        )}
       </CodeBlock>
     </DocsPanel>
   )
 }
 
-export function RequestResponseContent() {
+export function RequestResponseContent(props: { host: string }) {
+  const { host } = props
+
   return (
     <DocsPanel title="Request & response" lead="Body and response match the official Gemini REST API. Paths: /api/v1, /api/v1beta, /api/v1beta2.">
       <div className="space-y-3">
         <Endpoint method="GET" path="/api/v1beta/models" note="List models — no body.">
-          {`curl "$HOST/api/v1beta/models" -H "X-API-KEY: <secret>"`}
+          {withHost(host, `curl "$HOST/api/v1beta/models" -H "X-API-KEY: <secret>"`)}
         </Endpoint>
         <Endpoint method="POST" path="/api/v1beta/models/{model}:generateContent" note="Body: JSON contents. Response: candidates / usageMetadata (same as Google).">
-          {`curl "$HOST/api/v1beta/models/gemini-2.5-flash:generateContent" \\
+          {withHost(
+            host,
+            `curl "$HOST/api/v1beta/models/gemini-2.5-flash:generateContent" \\
   -H "Content-Type: application/json" \\
   -H "X-API-KEY: <secret>" \\
-  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}'`}
+  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}'`
+          )}
         </Endpoint>
         <Endpoint method="POST" path="/api/v1beta/models/{model}:streamGenerateContent" note="Same body as generateContent. Response: streamed chunks.">
-          {`curl "$HOST/api/v1beta/models/gemini-2.5-flash:streamGenerateContent" \\
+          {withHost(
+            host,
+            `curl "$HOST/api/v1beta/models/gemini-2.5-flash:streamGenerateContent" \\
   -H "Content-Type: application/json" \\
   -H "X-API-KEY: <secret>" \\
-  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}'`}
+  --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello"}]}]}'`
+          )}
         </Endpoint>
       </div>
 
       <div className="mt-5 overflow-hidden rounded-md border border-border bg-canvas">
         <ErrorRow code="401" detail="Missing or invalid credential" />
-        <ErrorRow code="503" detail="Proxy mode without GEMINI_API_KEY on the server" />
+        <ErrorRow code="503" detail="Proxy headers OK but GEMINI_API_KEY unset; or MCP without PROXY_AUTH_HEADERS" />
         <ErrorRow code="403" detail="Empty body on POST / PUT / PATCH" last />
       </div>
 
@@ -99,7 +121,7 @@ export function RequestResponseContent() {
         <a href={GEMINI_DOCS} target="_blank" rel="noreferrer" className="font-medium text-brand hover:text-brand-hover">
           Google Gemini API docs
         </a>
-        . Auth examples use either mode — swap headers as needed.
+        . Auth examples below use proxy headers — swap for passthrough (<DocsInlineCode>?key=</DocsInlineCode> / <DocsInlineCode>x-goog-api-key</DocsInlineCode>) as needed.
       </p>
     </DocsPanel>
   )

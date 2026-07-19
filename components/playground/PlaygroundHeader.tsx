@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 
+import { ApiHeaderButton } from '@/components/ApiDialog'
 import { BrandLogo } from '@/components/BrandLogo'
 import { McpHeaderButton } from '@/components/McpDialog'
 import { Tooltip } from '@/components/Tooltip'
@@ -34,6 +35,7 @@ export function PlaygroundHeader(props: PlaygroundHeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ApiHeaderButton />
           <McpHeaderButton />
           <Tooltip content="Back to chat" placement="bottom">
             <Link href="/chat" aria-label="Back to chat" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-subtle hover:bg-canvas">
@@ -57,6 +59,7 @@ export function PlaygroundHeader(props: PlaygroundHeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <ApiHeaderButton />
         <McpHeaderButton />
         <Tooltip content={props.clearDisabled ? 'Nothing to clear' : 'Clear chat'} placement="bottom">
           <button
