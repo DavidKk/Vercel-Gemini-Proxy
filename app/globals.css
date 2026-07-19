@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0b1220;
+  --muted: #5b657a;
+  --line: #d5dbe8;
+  --paper: #eef1f6;
+  --surface: #ffffff;
+  --subtle: #334155;
+  --accent: #0e7490;
+  --accent-deep: #155e75;
+  --accent-soft: #ecfeff;
+  --panel: #0f172a;
+  --panel-fg: #e2e8f0;
+  --panel-muted: #94a3b8;
+  --glow: rgba(14, 116, 144, 0.2);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Hide native scrollbar — wheel/trackpad/touch/keyboard still scroll */
+.custom-scroll,
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.custom-scroll::-webkit-scrollbar,
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

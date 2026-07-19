@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 const config = {
-  async rewrites() {
-    return [
-      {
-        source: '/:_path*',
-        destination: '/api/proxy',
-      },
-    ]
-  },
+  // App Router catch-all routes handle /api/v1 and /api/v1beta directly.
 }
 
 export default config

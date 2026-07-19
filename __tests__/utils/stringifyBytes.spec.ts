@@ -1,4 +1,4 @@
-import { stringifyBytes } from '@/utils/stringifyBytes'
+import { stringifyBytes } from '@/services/gemini/utils/stringifyBytes'
 
 describe('stringifyBytes', () => {
   it('should return "0 Bytes" for 0 bytes', () => {

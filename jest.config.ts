@@ -8,6 +8,6 @@ export default async (): Promise<Config.InitialOptions> => {
     testTimeout: TIMEOUT,
     projects: ['<rootDir>/jest.config.unittest.ts'],
     coverageReporters: ['text', 'cobertura', 'html'],
-    collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!<rootDir>/src/**/*.d.ts'],
+    collectCoverageFrom: ['<rootDir>/services/**/*.ts', '!<rootDir>/services/**/*.d.ts', '<rootDir>/app/**/*.ts', '!<rootDir>/app/**/*.d.ts'],
   }
 }

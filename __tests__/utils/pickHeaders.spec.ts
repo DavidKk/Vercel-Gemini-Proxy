@@ -1,4 +1,4 @@
-import { pickHeaders } from '@/utils/pickHeaders'
+import { pickHeaders } from '@/services/gemini/utils/pickHeaders'
 
 describe('test utils/pickHeaders', () => {
   it('should return an empty Headers object when the input Headers object is empty', () => {

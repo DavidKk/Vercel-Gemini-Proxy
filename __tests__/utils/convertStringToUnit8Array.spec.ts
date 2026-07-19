@@ -1,4 +1,4 @@
-import { convertStringToUint8Array } from '@/utils/convertStringToUint8Array'
+import { convertStringToUint8Array } from '@/services/gemini/utils/convertStringToUint8Array'
 
 describe('convertStringToUint8Array', () => {
   it('should return the input string if it is not a string', () => {

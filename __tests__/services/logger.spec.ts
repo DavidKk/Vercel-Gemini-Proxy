@@ -1,34 +1,23 @@
 import { createLogger } from '@/services/logger'
 
 describe('test services/logger', () => {
-  it('should create a logger with the specified types', () => {
-    const logger = createLogger('abc', 'bcd')
-    expect(logger).toHaveProperty('register')
-    expect(typeof logger.register).toBe('function')
+  it('should create a module logger with info/ok/warn/fail', () => {
+    const logger = createLogger('api-gemini')
+    expect(typeof logger.info).toBe('function')
+    expect(typeof logger.ok).toBe('function')
+    expect(typeof logger.warn).toBe('function')
+    expect(typeof logger.fail).toBe('function')
   })
 
-  it('should create a logger map with the specified prefixes', () => {
-    const logger = createLogger('abc', 'bcd')
-    const loggerMap = logger.register('xyz')
-
-    expect(loggerMap).toHaveProperty('abc')
-    expect(typeof loggerMap.abc).toBe('object')
-    expect(Object.keys(loggerMap.abc)).toEqual(['info', 'fail', 'ok', 'warn'])
-    expect(loggerMap).toHaveProperty('bcd')
-    expect(typeof loggerMap.bcd).toBe('object')
-    expect(Object.keys(loggerMap.bcd)).toEqual(['info', 'fail', 'ok', 'warn'])
-  })
-
-  it('should log messages with the specified prefixes', () => {
-    const logger = createLogger('abc', 'bcd')
-    const { abc, bcd } = logger.register('xyz')
+  it('should log messages with module prefix', () => {
+    const logger = createLogger('api-gemini')
     const spy = jest.spyOn(console, 'log').mockImplementation()
 
-    abc.info('message')
-    bcd.fail('message')
+    logger.info('message')
+    logger.ok('done')
 
-    expect(spy).toHaveBeenCalledTimes(2)
-    expect(spy).toHaveBeenCalledWith('[INFO][XYZ][ABC] message')
-    expect(spy).toHaveBeenCalledWith('[FAIL][XYZ][BCD] message')
+    expect(spy).toHaveBeenCalledWith('[info][api-gemini]', 'message')
+    expect(spy).toHaveBeenCalledWith('[ok][api-gemini]', 'done')
+    spy.mockRestore()
   })
 })
