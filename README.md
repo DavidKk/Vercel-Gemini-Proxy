@@ -87,4 +87,34 @@ curl "$HOST/api/v1beta/models" \
 | `GEMINI_RELAY_KV_REST_API_URL` / `GEMINI_RELAY_KV_REST_API_TOKEN` | Server (optional)              | Vercel KV REST credentials for rotation counters. Do not use `*_READ_ONLY_TOKEN` or `*_KV_URL` / `*_REDIS_URL`.                           |
 | `VERCEL_SECRET`                                                   | Client (when protection is on) | Value of Protection Bypass for Automation → send as `x-vercel-protection-bypass`.                                                         |
 
-MCP (optional): `POST/GET /api/mcp` requires proxy mode. Skill: `/skills/gemini-relay-skill.md`.
+## MCP (for agents)
+
+HTTP MCP ships the **Skill** (deploy / REST / auth) plus `gemini_list_models` smoke test. Generation stays on REST / Playground. **Proxy mode only** — send `PROXY_AUTH_HEADERS` (e.g. `X-API-KEY`); Gemini key passthrough is rejected.
+
+**One-click install** (opens Cursor / VS Code; replace `<your-proxy-secret>` after install if needed):
+
+[![Add to Cursor](https://img.shields.io/badge/Add_to-Cursor-black?style=flat-square&logo=cursor)](cursor://anysphere.cursor-deeplink/mcp/install?name=gemini-relay&config=eyJ1cmwiOiJodHRwczovL2dlbWluaS1yZWxheS1wcm94eS52ZXJjZWwuYXBwL2FwaS9tY3AiLCJoZWFkZXJzIjp7IlgtQVBJLUtFWSI6Ijx5b3VyLXByb3h5LXNlY3JldD4ifX0%3D) [![Add to VS Code](https://img.shields.io/badge/Add_to-VS_Code-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](vscode:mcp/install?%7B%22name%22%3A%22gemini-relay%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fgemini-relay-proxy.vercel.app%2Fapi%2Fmcp%22%2C%22headers%22%3A%7B%22X-API-KEY%22%3A%22%3Cyour-proxy-secret%3E%22%7D%7D) [![Add to Insiders](https://img.shields.io/badge/Add_to-VS_Code_Insiders-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](vscode-insiders:mcp/install?%7B%22name%22%3A%22gemini-relay%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fgemini-relay-proxy.vercel.app%2Fapi%2Fmcp%22%2C%22headers%22%3A%7B%22X-API-KEY%22%3A%22%3Cyour-proxy-secret%3E%22%7D%7D)
+
+Or paste into Cursor `mcp.json` (server key `gemini-relay`):
+
+```json
+{
+  "mcpServers": {
+    "gemini-relay": {
+      "url": "https://gemini-relay-proxy.vercel.app/api/mcp",
+      "headers": {
+        "X-API-KEY": "<your-proxy-secret>"
+      }
+    }
+  }
+}
+```
+
+| Resource                    | URL                                                                |
+| --------------------------- | ------------------------------------------------------------------ |
+| MCP endpoint                | https://gemini-relay-proxy.vercel.app/api/mcp                      |
+| Install meta (header names) | https://gemini-relay-proxy.vercel.app/api/mcp/meta                 |
+| Skill                       | https://gemini-relay-proxy.vercel.app/skills/gemini-relay-skill.md |
+| Skill URI                   | `skill://gemini-relay/gemini-relay-skill.md`                       |
+
+Site UI: header **MCP** button → same one-click links + Copy mcp.json. After connect: `resources/read` the Skill, optional `tools/call` `gemini_list_models`. On your own host, swap the origin to `$HOST`.

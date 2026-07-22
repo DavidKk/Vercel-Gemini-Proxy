@@ -87,4 +87,34 @@ curl "$HOST/api/v1beta/models" \
 | `GEMINI_RELAY_KV_REST_API_URL` / `GEMINI_RELAY_KV_REST_API_TOKEN` | 服务端（可选）       | Vercel KV REST 凭证，用于轮询计数；勿用 `*_READ_ONLY_TOKEN` 或 `*_KV_URL` / `*_REDIS_URL`        |
 | `VERCEL_SECRET`                                                   | 客户端（开启保护时） | Protection Bypass for Automation 的值，以 `x-vercel-protection-bypass` 发送                      |
 
-MCP（可选）：`/api/mcp` 需 Proxy 模式。Skill：`/skills/gemini-relay-skill.md`。
+## MCP（给 Agent 用）
+
+HTTP MCP 提供 **Skill**（部署 / REST / 鉴权）以及 `gemini_list_models` 冒烟测试；正式生成请走 REST / Playground。**仅 Proxy 模式**——需发送 `PROXY_AUTH_HEADERS`（如 `X-API-KEY`），不接受 Gemini Key 透传。
+
+**一键安装**（打开 Cursor / VS Code；安装后按需替换 `<your-proxy-secret>`）：
+
+[![Add to Cursor](https://img.shields.io/badge/Add_to-Cursor-black?style=flat-square&logo=cursor)](cursor://anysphere.cursor-deeplink/mcp/install?name=gemini-relay&config=eyJ1cmwiOiJodHRwczovL2dlbWluaS1yZWxheS1wcm94eS52ZXJjZWwuYXBwL2FwaS9tY3AiLCJoZWFkZXJzIjp7IlgtQVBJLUtFWSI6Ijx5b3VyLXByb3h5LXNlY3JldD4ifX0%3D) [![Add to VS Code](https://img.shields.io/badge/Add_to-VS_Code-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](vscode:mcp/install?%7B%22name%22%3A%22gemini-relay%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fgemini-relay-proxy.vercel.app%2Fapi%2Fmcp%22%2C%22headers%22%3A%7B%22X-API-KEY%22%3A%22%3Cyour-proxy-secret%3E%22%7D%7D) [![Add to Insiders](https://img.shields.io/badge/Add_to-VS_Code_Insiders-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](vscode-insiders:mcp/install?%7B%22name%22%3A%22gemini-relay%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fgemini-relay-proxy.vercel.app%2Fapi%2Fmcp%22%2C%22headers%22%3A%7B%22X-API-KEY%22%3A%22%3Cyour-proxy-secret%3E%22%7D%7D)
+
+或粘贴到 Cursor `mcp.json`（server key 为 `gemini-relay`）：
+
+```json
+{
+  "mcpServers": {
+    "gemini-relay": {
+      "url": "https://gemini-relay-proxy.vercel.app/api/mcp",
+      "headers": {
+        "X-API-KEY": "<your-proxy-secret>"
+      }
+    }
+  }
+}
+```
+
+| 资源                    | 地址                                                               |
+| ----------------------- | ------------------------------------------------------------------ |
+| MCP 端点                | https://gemini-relay-proxy.vercel.app/api/mcp                      |
+| 安装元信息（Header 名） | https://gemini-relay-proxy.vercel.app/api/mcp/meta                 |
+| Skill                   | https://gemini-relay-proxy.vercel.app/skills/gemini-relay-skill.md |
+| Skill URI               | `skill://gemini-relay/gemini-relay-skill.md`                       |
+
+站内：Header 的 **MCP** 按钮 → 同样的一键安装 + Copy mcp.json。连接后 `resources/read` Skill，可选 `tools/call` `gemini_list_models`。自建实例把 origin 换成 `$HOST` 即可。

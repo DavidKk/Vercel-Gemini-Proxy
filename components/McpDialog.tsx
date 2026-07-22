@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import { Skeleton, SkeletonRegion } from '@/components/playground/PlaygroundSkeletons'
 import { ScrollArea } from '@/components/ScrollArea'
 import { Tooltip } from '@/components/Tooltip'
 import { buildCursorMcpInstallDeepLink, buildCursorMcpJson, buildVsCodeMcpInstallDeepLink, MCP_INSTALL_SERVER_KEY } from '@/services/mcp/installSnippets'
@@ -136,9 +137,9 @@ export function McpDialog(props: McpDialogProps) {
         </div>
 
         <ScrollArea className="min-h-0 flex-1" scrollClassName="p-4">
-          {loading ? <p className="text-sm text-muted">Loading…</p> : null}
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          {meta ? (
+          {loading ? <McpDialogSkeleton /> : null}
+          {!loading && error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {!loading && meta ? (
             <div className="space-y-5 text-sm">
               <p className="leading-relaxed text-muted">
                 Install this HTTP MCP for Skill docs and a list-models smoke test. Generation stays on REST / Playground. Skill resource:{' '}
@@ -246,6 +247,48 @@ function MetaRow(props: { label: string; value: string; copied: string | null; o
         ) : null}
       </div>
     </div>
+  )
+}
+
+function MetaRowSkeleton(props: { withOpen?: boolean }) {
+  return (
+    <div className="space-y-1.5">
+      <Skeleton className="h-3 w-36" />
+      <div className="flex items-center gap-1.5">
+        <Skeleton className="h-8 min-w-0 flex-1" />
+        <Skeleton className="h-8 w-8 shrink-0" />
+        {props.withOpen ? <Skeleton className="h-8 w-8 shrink-0" /> : null}
+      </div>
+    </div>
+  )
+}
+
+/** Placeholder matching loaded dialog layout — avoids jump from a one-line Loading… */
+function McpDialogSkeleton() {
+  return (
+    <SkeletonRegion label="Loading MCP & Skill" className="space-y-5">
+      <div className="space-y-2">
+        <Skeleton className="h-3.5 w-full max-w-[34rem]" />
+        <Skeleton className="h-3.5 w-[88%] max-w-[30rem]" />
+      </div>
+      <MetaRowSkeleton withOpen />
+      <MetaRowSkeleton />
+      <div className="space-y-1.5">
+        <Skeleton className="h-3 w-12" />
+        <Skeleton className="h-3.5 w-full max-w-[28rem]" />
+        <Skeleton className="h-3 w-52" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-14" />
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-8 w-[4.5rem]" />
+          <Skeleton className="h-8 w-[4.25rem]" />
+          <Skeleton className="h-8 w-[6.5rem]" />
+        </div>
+        <Skeleton className="mt-2 h-28 w-full" />
+      </div>
+    </SkeletonRegion>
   )
 }
 
