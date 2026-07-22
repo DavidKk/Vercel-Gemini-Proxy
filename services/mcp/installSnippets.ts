@@ -1,9 +1,13 @@
 /**
  * Cursor / VS Code MCP one-click install helpers.
- * {@link MCP_INSTALL_SERVER_KEY} must match MCP manifest `name`.
+ * Keys must match MCP manifest `name` for each endpoint.
  */
 
-export const MCP_INSTALL_SERVER_KEY = 'gemini-relay'
+/** Bootstrap (public) MCP — `/api/mcp/install` */
+export const MCP_INSTALL_SERVER_KEY = 'gemini-relay-install'
+
+/** Auth (proxy) MCP — `/api/mcp` */
+export const MCP_AUTH_SERVER_KEY = 'gemini-relay'
 
 export function normalizeMcpAuthHeaders(headers?: Record<string, string> | null): Record<string, string> | undefined {
   if (!headers) {
@@ -25,7 +29,7 @@ function utf8JsonToBase64(json: string): string {
   return btoa(binary)
 }
 
-export function buildCursorMcpJson(mcpHttpUrl: string, serverKey: string = MCP_INSTALL_SERVER_KEY, headers?: Record<string, string> | null): string {
+export function buildCursorMcpJson(mcpHttpUrl: string, serverKey: string = MCP_AUTH_SERVER_KEY, headers?: Record<string, string> | null): string {
   const h = normalizeMcpAuthHeaders(headers ?? undefined)
   const entry: Record<string, unknown> = { url: mcpHttpUrl }
   if (h) {
@@ -34,7 +38,7 @@ export function buildCursorMcpJson(mcpHttpUrl: string, serverKey: string = MCP_I
   return JSON.stringify({ mcpServers: { [serverKey]: entry } }, null, 2)
 }
 
-export function buildCursorMcpInstallDeepLink(mcpHttpUrl: string, serverKey: string = MCP_INSTALL_SERVER_KEY, headers?: Record<string, string> | null): string {
+export function buildCursorMcpInstallDeepLink(mcpHttpUrl: string, serverKey: string = MCP_AUTH_SERVER_KEY, headers?: Record<string, string> | null): string {
   const h = normalizeMcpAuthHeaders(headers ?? undefined)
   const configObj: Record<string, unknown> = { url: mcpHttpUrl }
   if (h) {
@@ -48,7 +52,7 @@ export type VsCodeMcpInstallChannel = 'stable' | 'insiders'
 
 export function buildVsCodeMcpInstallDeepLink(
   mcpHttpUrl: string,
-  serverKey: string = MCP_INSTALL_SERVER_KEY,
+  serverKey: string = MCP_AUTH_SERVER_KEY,
   channel: VsCodeMcpInstallChannel = 'stable',
   headers?: Record<string, string> | null
 ): string {

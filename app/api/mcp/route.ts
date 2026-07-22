@@ -4,7 +4,7 @@ import { loadAuthEnv, resolveMcpAuth } from '@/services/gemini/auth'
 import { pickKeyLeastTokensToday } from '@/services/gemini/keyRotation'
 import { createMcpService, handleMcpJsonRpc, mcpBadRequest, mcpManifestResponse, mcpUnauthorized } from '@/services/mcp/handler'
 
-const service = createMcpService()
+const service = createMcpService({ mode: 'auth' })
 
 function authorize(req: NextRequest) {
   return resolveMcpAuth(req.headers, loadAuthEnv())
@@ -17,7 +17,7 @@ function authFailure(auth: { ok: false; status: number; message: string }) {
   return mcpUnauthorized()
 }
 
-/** GET /api/mcp — MCP manifest (tools + skill resources). Proxy auth required. */
+/** GET /api/mcp — auth MCP manifest. Proxy auth required. */
 export async function GET(req: NextRequest) {
   const auth = authorize(req)
   if (!auth.ok) {
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   return mcpManifestResponse(service)
 }
 
-/** POST /api/mcp — JSON-RPC 2.0 (initialize, tools/*, resources/*). Proxy auth required. */
+/** POST /api/mcp — auth MCP JSON-RPC. Proxy auth required for all methods. */
 export async function POST(req: NextRequest) {
   const authResult = authorize(req)
   if (!authResult.ok) {

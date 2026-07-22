@@ -124,9 +124,10 @@ export function resolveUpstreamAuth(headers: Headers, searchParams: URLSearchPar
 }
 
 /**
- * Auth for HTTP MCP (`/api/mcp`).
+ * Auth for HTTP MCP auth endpoint (`/api/mcp`).
  * Proxy headers only — never accepts client Gemini key passthrough.
  * Requires `PROXY_AUTH_HEADERS` configured on the server.
+ * Install MCP (`/api/mcp/install`) is public and does not use this helper.
  */
 export function resolveMcpAuth(headers: Headers, env: AuthEnv): UpstreamAuthResult {
   const pairs = env.proxyAuthHeaders

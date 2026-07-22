@@ -6,12 +6,15 @@ import { createPortal } from 'react-dom'
 import { Skeleton, SkeletonRegion } from '@/components/playground/PlaygroundSkeletons'
 import { ScrollArea } from '@/components/ScrollArea'
 import { Tooltip } from '@/components/Tooltip'
-import { buildCursorMcpInstallDeepLink, buildCursorMcpJson, buildVsCodeMcpInstallDeepLink, MCP_INSTALL_SERVER_KEY } from '@/services/mcp/installSnippets'
+import { buildCursorMcpInstallDeepLink, buildCursorMcpJson, buildVsCodeMcpInstallDeepLink, MCP_AUTH_SERVER_KEY, MCP_INSTALL_SERVER_KEY } from '@/services/mcp/installSnippets'
 
 type McpMeta = {
-  endpoint: string
   skillUrl: string
   skillResourceUri: string
+  installEnabled: boolean
+  installEndpoint: string
+  installServerKey: string
+  endpoint: string
   serverKey: string
   proxyConfigured: boolean
   geminiKeyConfigured?: boolean
@@ -83,14 +86,20 @@ export function McpDialog(props: McpDialogProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const installHeaders = useMemo(() => meta?.headerPlaceholders ?? {}, [meta])
-
-  const mcpJson = useMemo(() => {
+  const installJson = useMemo(() => {
     if (!meta) {
       return ''
     }
-    return buildCursorMcpJson(meta.endpoint, meta.serverKey || MCP_INSTALL_SERVER_KEY, installHeaders)
-  }, [meta, installHeaders])
+    return buildCursorMcpJson(meta.installEndpoint, meta.installServerKey || MCP_INSTALL_SERVER_KEY)
+  }, [meta])
+
+  const authJson = useMemo(() => {
+    if (!meta) {
+      return ''
+    }
+    const headers = meta.proxyConfigured ? meta.headerPlaceholders : undefined
+    return buildCursorMcpJson(meta.endpoint, meta.serverKey || MCP_AUTH_SERVER_KEY, headers)
+  }, [meta])
 
   const copyText = useCallback(async (label: string, text: string) => {
     try {
@@ -142,7 +151,8 @@ export function McpDialog(props: McpDialogProps) {
           {!loading && meta ? (
             <div className="space-y-5 text-sm">
               <p className="leading-relaxed text-muted">
-                Install this HTTP MCP for Skill docs and a list-models smoke test. Generation stays on REST / Playground. Skill resource:{' '}
+                Two MCPs, one Skill. Install MCP (no secret) for deploy docs; after deploy switch to auth MCP with proxy headers. Then set{' '}
+                <code className="font-mono text-[12px]">MCP_INSTALL_ENABLED=false</code> to take install offline. Skill:{' '}
                 <code className="font-mono text-[12px] text-primary">{meta.skillResourceUri}</code>.
               </p>
 
@@ -154,58 +164,96 @@ export function McpDialog(props: McpDialogProps) {
                 onOpen={() => window.open(meta.skillUrl, '_blank', 'noopener,noreferrer')}
               />
 
-              <MetaRow label="MCP URL (GET manifest · POST JSON-RPC)" value={meta.endpoint} copied={copied} onCopy={() => void copyText('MCP URL', meta.endpoint)} />
-
               <div className="space-y-1.5">
                 <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">Auth</p>
                 <p className="text-[13px] leading-relaxed text-muted">{meta.authHint}</p>
                 {meta.proxyConfigured ? (
                   <p className="font-mono text-[12px] text-primary">
-                    Headers: {meta.headerNames.join(', ')} (replace placeholders in mcp.json)
+                    Auth MCP headers: {meta.headerNames.join(', ')}
                     {meta.geminiKeyConfigured === false ? ' · server GEMINI_API_KEYS is not set yet' : ''}
                   </p>
                 ) : (
-                  <p className="text-[13px] text-amber-800">
-                    Proxy env not configured — one-click install is disabled until <code className="font-mono text-[12px]">PROXY_AUTH_HEADERS</code> is set.
+                  <p className="text-[13px] text-muted">
+                    Auth MCP needs <code className="font-mono text-[12px]">PROXY_AUTH_HEADERS</code> + <code className="font-mono text-[12px]">GEMINI_API_KEYS</code> after deploy.
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">Install</p>
-                {meta.proxyConfigured ? (
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">1. Install MCP (public · no secret)</p>
+                {meta.installEnabled ? (
                   <>
+                    <MetaRow label="Install URL" value={meta.installEndpoint} copied={copied} onCopy={() => void copyText('Install URL', meta.installEndpoint)} />
                     <div className="flex flex-wrap gap-2">
                       <a
-                        href={buildCursorMcpInstallDeepLink(meta.endpoint, meta.serverKey, installHeaders)}
+                        href={buildCursorMcpInstallDeepLink(meta.installEndpoint, meta.installServerKey)}
                         className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
                       >
                         Cursor
                       </a>
                       <a
-                        href={buildVsCodeMcpInstallDeepLink(meta.endpoint, meta.serverKey, 'stable', installHeaders)}
+                        href={buildVsCodeMcpInstallDeepLink(meta.installEndpoint, meta.installServerKey, 'stable')}
                         className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
                       >
                         VS Code
                       </a>
                       <a
-                        href={buildVsCodeMcpInstallDeepLink(meta.endpoint, meta.serverKey, 'insiders', installHeaders)}
+                        href={buildVsCodeMcpInstallDeepLink(meta.installEndpoint, meta.installServerKey, 'insiders')}
                         className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
                       >
                         Insiders
                       </a>
                       <button
                         type="button"
-                        onClick={() => void copyText('mcp.json', mcpJson)}
+                        onClick={() => void copyText('install mcp.json', installJson)}
                         className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
                       >
-                        {copied === 'mcp.json' ? 'Copied' : 'Copy mcp.json'}
+                        {copied === 'install mcp.json' ? 'Copied' : 'Copy mcp.json'}
                       </button>
                     </div>
-                    <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-canvas px-3 py-2 font-mono text-[11px] leading-relaxed text-primary">{mcpJson}</pre>
+                    <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-canvas px-3 py-2 font-mono text-[11px] leading-relaxed text-primary">{installJson}</pre>
                   </>
                 ) : (
-                  <p className="text-[13px] text-muted">Set proxy env on the server, redeploy, then reopen this dialog.</p>
+                  <p className="text-[13px] text-amber-800">Install MCP is offline (`MCP_INSTALL_ENABLED=false`). Use auth MCP below.</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">2. Auth MCP (proxy required)</p>
+                <MetaRow label="Auth URL" value={meta.endpoint} copied={copied} onCopy={() => void copyText('Auth URL', meta.endpoint)} />
+                {meta.proxyConfigured ? (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={buildCursorMcpInstallDeepLink(meta.endpoint, meta.serverKey, meta.headerPlaceholders)}
+                        className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
+                      >
+                        Cursor
+                      </a>
+                      <a
+                        href={buildVsCodeMcpInstallDeepLink(meta.endpoint, meta.serverKey, 'stable', meta.headerPlaceholders)}
+                        className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
+                      >
+                        VS Code
+                      </a>
+                      <a
+                        href={buildVsCodeMcpInstallDeepLink(meta.endpoint, meta.serverKey, 'insiders', meta.headerPlaceholders)}
+                        className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
+                      >
+                        Insiders
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void copyText('auth mcp.json', authJson)}
+                        className="inline-flex items-center rounded-md border border-border bg-canvas px-2.5 py-1.5 text-[12px] font-medium text-primary hover:border-brand hover:text-brand-hover"
+                      >
+                        {copied === 'auth mcp.json' ? 'Copied' : 'Copy mcp.json'}
+                      </button>
+                    </div>
+                    <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-canvas px-3 py-2 font-mono text-[11px] leading-relaxed text-primary">{authJson}</pre>
+                  </>
+                ) : (
+                  <p className="text-[13px] text-muted">Configure proxy env and redeploy before installing auth MCP.</p>
                 )}
               </div>
             </div>
@@ -223,7 +271,7 @@ function MetaRow(props: { label: string; value: string; copied: string | null; o
       <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">{props.label}</p>
       <div className="flex items-center gap-1.5">
         <input readOnly value={props.value} className="h-8 min-w-0 flex-1 rounded-md border border-border bg-canvas px-2.5 font-mono text-[11px] text-primary outline-none" />
-        <Tooltip content={props.copied === props.label.split(' ')[0] || props.copied === 'Skill' || props.copied === 'MCP URL' ? 'Copied' : 'Copy'} placement="top">
+        <Tooltip content={props.copied === 'Skill' || props.copied === 'Install URL' || props.copied === 'Auth URL' ? 'Copied' : 'Copy'} placement="top">
           <button
             type="button"
             aria-label="Copy"

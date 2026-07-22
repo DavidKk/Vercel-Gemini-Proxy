@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { MCP_INSTALL_SERVER_KEY } from '@/services/mcp/installSnippets'
+import { MCP_AUTH_SERVER_KEY, MCP_INSTALL_SERVER_KEY } from '@/services/mcp/installSnippets'
 import { createMcpSkillResourceProvider, type McpManifestResource } from '@/services/mcp/skillResources'
 import { createMcpTools, type McpTool } from '@/services/mcp/tools'
 
@@ -26,7 +26,10 @@ function jsonRpcError(id: string | number | null, code: number, message: string)
   return noStore(NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } }))
 }
 
+export type McpServiceMode = 'install' | 'auth'
+
 export type McpService = {
+  mode: McpServiceMode
   name: string
   version: string
   description: string
@@ -34,14 +37,38 @@ export type McpService = {
   resources: ReturnType<typeof createMcpSkillResourceProvider>
 }
 
-export function createMcpService(): McpService {
+export function isMcpInstallEnabled(env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env): boolean {
+  const raw = env.MCP_INSTALL_ENABLED
+  if (raw == null || String(raw).trim() === '') {
+    return true
+  }
+  const normalized = String(raw).trim().toLowerCase()
+  return !(normalized === '0' || normalized === 'false' || normalized === 'off' || normalized === 'no')
+}
+
+export function createMcpService(options: { mode: McpServiceMode } = { mode: 'auth' }): McpService {
+  const mode = options.mode
+  const resources = createMcpSkillResourceProvider()
+
+  if (mode === 'install') {
+    return {
+      mode,
+      name: MCP_INSTALL_SERVER_KEY,
+      version: '1.0.0',
+      description: 'Gemini Relay install MCP — public Skill (deploy guide). Disable with MCP_INSTALL_ENABLED=false after bootstrap.',
+      tools: new Map(),
+      resources,
+    }
+  }
+
   const toolsRecord = createMcpTools()
   return {
-    name: MCP_INSTALL_SERVER_KEY,
+    mode,
+    name: MCP_AUTH_SERVER_KEY,
     version: '1.0.0',
-    description: 'Gemini Relay HTTP MCP — skill docs + list-models smoke test (proxy auth only).',
+    description: 'Gemini Relay HTTP MCP — Skill + list-models smoke test (proxy auth required).',
     tools: new Map(Object.entries(toolsRecord)),
-    resources: createMcpSkillResourceProvider(),
+    resources,
   }
 }
 
@@ -154,4 +181,8 @@ export function mcpUnauthorized() {
 
 export function mcpBadRequest(message: string) {
   return noStore(NextResponse.json({ type: 'error', error: { code: 'invalid_argument', message } }, { status: 400 }))
+}
+
+export function mcpInstallDisabled() {
+  return noStore(NextResponse.json({ error: 'MCP install endpoint is disabled (MCP_INSTALL_ENABLED=false)' }, { status: 404 }))
 }

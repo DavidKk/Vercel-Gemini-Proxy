@@ -9,7 +9,7 @@ describe('createMcpTools', () => {
 
 describe('createMcpService / tools/list', () => {
   it('lists a single smoke-test tool and no generateContent', async () => {
-    const service = createMcpService()
+    const service = createMcpService({ mode: 'auth' })
     const response = await handleMcpJsonRpc(service, { jsonrpc: '2.0', id: 1, method: 'tools/list' } as never, 'unused-key')
     const body = (await response.json()) as {
       result: { tools: Array<{ name: string }> }
@@ -18,7 +18,7 @@ describe('createMcpService / tools/list', () => {
   })
 
   it('rejects unknown generate tool', async () => {
-    const service = createMcpService()
+    const service = createMcpService({ mode: 'auth' })
     const response = await handleMcpJsonRpc(
       service,
       {

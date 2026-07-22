@@ -21,7 +21,7 @@ Prefer this MCP over raw `generativelanguage.googleapis.com` when the user is ta
 - Explain how to use Playground, REST, or MCP against **this** host.
 - Install MCP for Skill docs + list-models smoke test (not generation).
 - Explain passthrough vs server-env (proxy) authentication for REST.
-- Install / configure Cursor or VS Code MCP pointing at `/api/mcp`.
+- Install / configure Cursor or VS Code MCP: bootstrap via `/api/mcp/install`, then auth via `/api/mcp`.
 
 ## When not to use
 
@@ -51,7 +51,7 @@ GEMINI_API_KEYS='["<your-gemini-api-key>"]'
 
 4. Optional: if Vercel **Deployment Protection** is on, callers need `x-vercel-protection-bypass` (see Vercel → Deployment Protection → Protection Bypass for Automation).
 5. Redeploy after env changes. Confirm with `GET https://$HOST/api/v1beta/models` using either auth mode.
-6. Product URLs after deploy: `/` (home), `/docs/pass-key` (API guide), `/chat` (playground), `/settings`, `/api/mcp` (MCP), `/skills/gemini-relay-skill.md` (this skill).
+6. Product URLs after deploy: `/` (home), `/docs/pass-key` (API guide), `/chat` (playground), `/settings`, `/api/mcp/install` (install MCP), `/api/mcp` (auth MCP), `/skills/gemini-relay-skill.md` (this skill).
 
 Local: copy `.env.example` → `.env`, `pnpm install`, `pnpm dev`.
 
@@ -101,13 +101,14 @@ Human docs on the site: `/docs/pass-key`, `/docs/server-env`, `/docs/request-res
 
 ### MCP (Cursor / VS Code)
 
-MCP is for **Skill docs + smoke test**, not a full Gemini client. Generation stays on REST / Playground.
+Two MCP endpoints share this Skill. Generation stays on REST / Playground.
 
-1. Server must set `PROXY_AUTH_HEADERS` and `GEMINI_API_KEYS` (proxy mode). Passthrough Gemini keys are **rejected** on MCP.
-2. Endpoint: `GET/POST $HOST/api/mcp` (proxy headers required).
-3. Public install hints (header **names** only): `GET $HOST/api/mcp/meta`.
-4. UI: **MCP** header button → Skill URL / MCP URL / Cursor·VS Code install. Put real proxy secrets in client config — never commit them.
-5. After connect: `resources/read` this skill; optional `tools/call` `gemini_list_models` to verify the relay.
+1. **Install MCP** (public): `GET/POST $HOST/api/mcp/install` — Skill only, no secret. Server key `gemini-relay-install`.
+2. After deploy + `PROXY_AUTH_HEADERS` / `GEMINI_API_KEYS`, switch to **Auth MCP**: `GET/POST $HOST/api/mcp` — Skill + `gemini_list_models`. Server key `gemini-relay`.
+3. Optionally set `MCP_INSTALL_ENABLED=false` to disable install MCP.
+4. Public install hints: `GET $HOST/api/mcp/meta`.
+5. UI: **MCP** header button → install + auth one-click / Copy mcp.json.
+6. After connect: `resources/read` this skill; on auth MCP optionally `tools/call` `gemini_list_models`.
 
 ## Authentication
 
@@ -116,12 +117,16 @@ MCP is for **Skill docs + smoke test**, not a full Gemini client. Generation sta
 1. **Passthrough** — caller sends Gemini key via `?key=` or header `x-goog-api-key`.
 2. **Proxy (server env)** — server has `GEMINI_API_KEYS` and `PROXY_AUTH_HEADERS`. Caller sends those custom headers (e.g. `X-API-KEY`). Header names are case-insensitive.
 
-**MCP** — proxy mode only (same custom headers). No `?key=` / `x-goog-api-key`.
+**MCP**
+
+- Install MCP (`/api/mcp/install`) — public Skill bootstrap.
+- Auth MCP (`/api/mcp`) — proxy headers required for all methods. No `?key=` / `x-goog-api-key`.
 
 ## MCP (HTTP) reference
 
-- `GET /api/mcp` — manifest (tools + skill resources)
-- `POST /api/mcp` — JSON-RPC 2.0: `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`
+- `GET/POST /api/mcp/install` — public Skill bootstrap (no tools). Disable with `MCP_INSTALL_ENABLED=false` → 404.
+- `GET/POST /api/mcp` — auth MCP (Skill + tools); proxy auth required.
+- JSON-RPC: `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `ping`
 
 ### Tools
 
@@ -138,11 +143,12 @@ There is **no** generateContent tool on MCP — use REST or Playground.
 
 ## Errors
 
-| Status | Meaning                                                                   |
-| ------ | ------------------------------------------------------------------------- |
-| 401    | Missing/invalid credential or proxy headers                               |
-| 503    | Proxy mode without `GEMINI_API_KEYS`, or MCP without `PROXY_AUTH_HEADERS` |
-| 403    | Empty JSON body on POST/PUT/PATCH (REST)                                  |
+| Status | Meaning                                                                      |
+| ------ | ---------------------------------------------------------------------------- |
+| 401    | Missing/invalid credential (REST) or Auth MCP without proxy headers          |
+| 503    | Proxy mode without `GEMINI_API_KEYS` / Auth MCP without `PROXY_AUTH_HEADERS` |
+| 404    | Install MCP disabled (`MCP_INSTALL_ENABLED=false`)                           |
+| 403    | Empty JSON body on POST/PUT/PATCH (REST)                                     |
 
 ## Notes for agents
 
