@@ -10,8 +10,7 @@
 
 ## Important notes
 
-- **Custom domain required for production.** Prefer DNS in a region that can reach Google Gemini.
-  <sub>Do not rely on `*.vercel.app` in production. If needed, front the service with a jump host or another edge proxy (e.g. CF).</sub>
+- **Custom domain required for production.** Prefer DNS in a region that can reach Google Gemini. Do not rely on `*.vercel.app` in production. If needed, front the service with a jump host or another edge proxy (e.g. CF).
 - Use **your own** Gemini API key. Do not share or reuse others’ keys.
 - Multiturn messages must end with `role: user` (or a function response). If the first message is not `user`, the proxy drops it; if the last is not `user`, the request is rejected.
 - Auth paths: `/api/v1`, `/api/v1beta`, `/api/v1beta2` only.

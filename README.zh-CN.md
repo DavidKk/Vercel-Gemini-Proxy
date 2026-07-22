@@ -10,8 +10,7 @@
 
 ## 重要须知
 
-- **生产环境必须使用自有域名。** DNS 请尽量解析到可访问 Google Gemini 的区域。
-  <sub>生产环境不宜依赖 `*.vercel.app`；必要时可用跳板机或其他边缘代理（如 CF）对外提供访问。</sub>
+- **生产环境必须使用自有域名。** DNS 请尽量解析到可访问 Google Gemini 的区域。生产环境不宜依赖 `*.vercel.app`；必要时可用跳板机或其他边缘代理（如 CF）对外提供访问。
 - 请使用**自己的** Gemini API Key，勿借用他人密钥。
 - 多轮对话最后一条须为 `role: user`（或 function response）。若首条非 `user`，代理会丢弃该条；若末条非 `user`，请求将被拒绝。
 - 仅支持路径：`/api/v1`、`/api/v1beta`、`/api/v1beta2`。
