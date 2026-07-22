@@ -4,79 +4,88 @@
 
 [![中文](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-green?style=flat-square&logo=docs)](https://github.com/DavidKk/vercel-gemini-proxy/blob/main/README.zh-CN.md) [![English](https://img.shields.io/badge/docs-English-green?style=flat-square&logo=docs)](https://github.com/DavidKk/vercel-gemini-proxy/blob/main/README.md)
 
-**Gemini Relay** is a Gemini API proxy on Vercel (Next.js App Router) for regions where direct Gemini access is slow or unavailable—plus a local streaming playground.
+**Gemini Relay** is a Gemini API proxy on Vercel (Next.js App Router) for regions where direct Gemini access is slow or blocked, plus a browser streaming playground for debugging.
 
-**Live demo:** [https://gemini-relay-proxy.vercel.app/chat](https://gemini-relay-proxy.vercel.app/chat)
+**Try it:** [gemini-relay-proxy.vercel.app/chat](https://gemini-relay-proxy.vercel.app/chat) <sub>(demo only)</sub>
 
-## Background
+## Important notes
 
-Due to network conditions and geographical locations, access to the Gemini API can be slow or even impossible in some regions. Gemini Relay lets you route traffic through Vercel so clients can reach Gemini more reliably, and debug streams in the browser playground.
+- **Custom domain required for production.** Prefer DNS in a region that can reach Google Gemini.
+  <sub>Do not rely on `*.vercel.app` in production. If needed, front the service with a jump host or another edge proxy (e.g. CF).</sub>
+- Use **your own** Gemini API key. Do not share or reuse others’ keys.
+- Multiturn messages must end with `role: user` (or a function response). If the first message is not `user`, the proxy drops it; if the last is not `user`, the request is rejected.
+- Auth paths: `/api/v1`, `/api/v1beta`, `/api/v1beta2` only.
+  - **Passthrough:** `?key=` or `x-goog-api-key` with your Gemini key.
+  - **Proxy mode:** headers from `PROXY_AUTH_HEADERS`; server injects a key from `GEMINI_API_KEYS`.
+  - Missing credential/path → `401`. Proxy mode without `GEMINI_API_KEYS` → `503`. Empty JSON body on POST/PUT/PATCH → `403` (GET needs no body).
+- Runs on Next.js **App Router** Route Handlers (`nodejs` + Fluid Compute): `app/api/v1|v1beta|v1beta2/[...path]` → `services/gemini/`. Successful calls return `200` then stream. `maxDuration` and business timeout are **120s**.
+- Model IDs live in the URL (transparent forward), e.g. `/api/v1beta/models/{model}:generateContent`. Prefer current Stable: `gemini-3.5-flash` (general) or `gemini-3.5-flash-lite` (lighter). Playground can Refresh the official model list.
+- Debug via Vercel → Logs (or local `pnpm dev` terminal). Playground / MCP are for debugging; generation still goes through the REST proxy.
 
-## Important Notes
-
-- This service must have its own domain name. Without a domain name, requests cannot be sent. Also, please try to set your DNS resolution in a region where Gemini allows access for successful connectivity.
-- The project requires a `Gemini API Token`. Please set up and use your own token, and refrain from using tokens from others to prevent unauthorized use of the service.
-- If the `role` of the last or the first message in the message context is not `user`, the error `Please ensure that multiturn requests ends with a user role or a function response.` may occur. Therefore, if the `role` of the first message is not `user`, the service will automatically delete the first (ie. the first) message. If the `role` of the last message is not user, an error will be reported and the message will not be sent to Gemini.
-- Credentials: either **passthrough** (`?key=` or `x-goog-api-key` with your Gemini key) or **proxy mode** (custom headers from env `PROXY_AUTH_HEADERS`, server injects a key from env `GEMINI_API_KEYS`). Path must be `/api/v1`, `/api/v1beta`, or `/api/v1beta2`. Missing credential/path → `401`. Proxy mode without `GEMINI_API_KEYS` → `503`. Empty JSON body on POST/PUT/PATCH → `403`. GET (e.g. list models) does not require a body.
-- The service returns `200` immediately and streams Gemini's reply. Route `maxDuration` and business timeout are **120 seconds** (enough for typical Agent streams on Hobby with Fluid Compute).
-- Model IDs are chosen by the client in the URL (transparent proxy). Prefer current Stable Flash models such as `gemini-2.5-flash`.
-- You can check the log situation through the Vercel console Log.
-
-## Deploy With Vercel
+## Deploy
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDavidKk%2Fvercel-gemini-proxy)
 
-## Playground
+1. Clone / import the repo and deploy.
+2. Attach a **custom domain**.
+3. Set env vars (see below). Redeploy after changes.
+4. If **Deployment Protection** is on, callers need `x-vercel-protection-bypass` (Vercel → Deployment Protection → Protection Bypass for Automation).
 
-- **Demo:** [https://gemini-relay-proxy.vercel.app/chat](https://gemini-relay-proxy.vercel.app/chat)
-- `/` — short how-to
-- `/chat` — Codex-style demo (Settings → API Key → Refresh models → stream)
-- `/settings` — API Key in browser `localStorage` only; Base URL fixed to `/api/v1beta`
+Local: copy `.env.example` → `.env`, then `pnpm install` && `pnpm dev`.
+
+## App routes
+
+| Path               | Purpose                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `/`                | Short how-to                                                            |
+| `/chat`            | Streaming playground (Settings → API Key → Refresh models → chat)       |
+| `/settings`        | API Key in browser `localStorage` only; Base URL fixed to `/api/v1beta` |
+| `/docs/pass-key`   | API guide (passthrough)                                                 |
+| `/docs/server-env` | API guide (proxy mode)                                                  |
 
 ## Usage
 
+Replace `$HOST` with your origin (custom domain in production).
+
+**Passthrough** (`?key=`):
+
 ```bash
-$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=$GEMINI_API_TOKEN" \
+curl "$HOST/api/v1beta/models/gemini-3.5-flash:streamGenerateContent?key=$GEMINI_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H "x-vercel-protection-bypass: $VERCEL_SECRET" \
-  -H 'cache-control: no-cache' \
+  -H "cache-control: no-cache" \
   --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}' \
   --compressed
 ```
 
-Header auth (recommended by Google) also works:
+**Passthrough** (header — recommended by Google):
 
 ```bash
-$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models/gemini-2.5-flash:generateContent" \
+curl "$HOST/api/v1beta/models/gemini-3.5-flash:generateContent" \
   -H "Content-Type: application/json" \
   -H "x-goog-api-key: $GEMINI_API_TOKEN" \
   -H "x-vercel-protection-bypass: $VERCEL_SECRET" \
   --data-raw '{"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}'
 ```
 
-Proxy mode (server holds the Gemini key; callers send headers from `PROXY_AUTH_HEADERS`):
+**Proxy mode** (server holds Gemini keys; callers send `PROXY_AUTH_HEADERS`):
 
 ```bash
-# Set on Vercel / .env (example):
 # PROXY_AUTH_HEADERS='{"X-API-KEY":"<secret>"}'
 # GEMINI_API_KEYS='["..."]'
-$ curl "http://$YOU_SERVER_HOST:$PORT/api/v1beta/models" \
+curl "$HOST/api/v1beta/models" \
   -H "X-API-KEY: <secret>" \
   -H "x-vercel-protection-bypass: $VERCEL_SECRET"
 ```
 
-### Parameters
+## Environment variables
 
-**GEMINI_API_TOKEN**: Client-side Gemini API KEY (passthrough mode)
+| Variable                                                          | Where                          | Description                                                                                                                               |
+| ----------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `GEMINI_API_TOKEN`                                                | Client                         | Your Gemini API key (passthrough). Get it from Google AI Studio / Cloud.                                                                  |
+| `GEMINI_API_KEYS`                                                 | Server                         | JSON array of Gemini keys for proxy mode. With Vercel KV and ≥2 keys, picks the key with the lowest total tokens for the current UTC day. |
+| `PROXY_AUTH_HEADERS`                                              | Server                         | JSON object of required headers (e.g. `{"X-API-KEY":"..."}`). All must match (AND). Names are case-insensitive.                           |
+| `GEMINI_RELAY_KV_REST_API_URL` / `GEMINI_RELAY_KV_REST_API_TOKEN` | Server (optional)              | Vercel KV REST credentials for rotation counters. Do not use `*_READ_ONLY_TOKEN` or `*_KV_URL` / `*_REDIS_URL`.                           |
+| `VERCEL_SECRET`                                                   | Client (when protection is on) | Value of Protection Bypass for Automation → send as `x-vercel-protection-bypass`.                                                         |
 
-Apply for a Google app, add Gemini, and get API keys.
-
-**GEMINI_API_KEYS** (server env): JSON array of Gemini keys for proxy mode (one or more). With Vercel KV and ≥2 keys, select least total tokens today (UTC)
-
-**GEMINI_RELAY_KV_REST_API_URL** / **GEMINI_RELAY_KV_REST_API_TOKEN** (optional): Vercel KV REST credentials for rotation counters (not `*_READ_ONLY_TOKEN`, not `*_KV_URL` / `*_REDIS_URL`)
-
-**PROXY_AUTH_HEADERS** (server env): JSON object of required headers (e.g. `{"X-API-KEY":"..."}`). All must match (AND). Extra headers can be added if desired. Header names are case-insensitive.
-
-**VERCEL_SECRET**: User Limitation
-
-Refer to the `Deployment Protection` > `Protection Bypass for Automation` settings in Vercel.
+MCP (optional): `POST/GET /api/mcp` requires proxy mode. Skill: `/skills/gemini-relay-skill.md`.
