@@ -57,13 +57,13 @@ export function PlaygroundHeader(props: PlaygroundHeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ApiHeaderButton />
-          <McpHeaderButton />
           <Tooltip content="Back to chat" placement="bottom">
             <Link href="/chat" aria-label="Back to chat" className={navIconClass}>
               <CloseIcon />
             </Link>
           </Tooltip>
+          <ApiHeaderButton />
+          <McpHeaderButton />
           <DocsAndGitHubLinks />
         </div>
       </header>
@@ -82,8 +82,6 @@ export function PlaygroundHeader(props: PlaygroundHeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <ApiHeaderButton />
-        <McpHeaderButton />
         <Tooltip content={props.clearDisabled ? 'Nothing to clear' : 'Clear chat'} placement="bottom">
           <button
             type="button"
@@ -100,6 +98,8 @@ export function PlaygroundHeader(props: PlaygroundHeaderProps) {
             <SettingsIcon />
           </Link>
         </Tooltip>
+        <ApiHeaderButton />
+        <McpHeaderButton />
         <DocsAndGitHubLinks />
       </div>
     </header>
