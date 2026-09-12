@@ -1,4 +1,5 @@
 # Dest resouces
+next-env.d.ts
 /libs
 /coverage
 /junit.xml

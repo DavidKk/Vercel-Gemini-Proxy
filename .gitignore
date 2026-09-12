@@ -1,5 +1,6 @@
 # Dest resouces
 .next
+next-env.d.ts
 coverage
 junit.xml
 *.tsbuildinfo
