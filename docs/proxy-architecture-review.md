@@ -149,9 +149,10 @@ return new Response(responseStream.readable, { status: 200, ... })
 
 特点：
 
-- HTTP status **对外几乎总是 200**
-- 上游 4xx/5xx / 超时 / 空 body，多数被编码进 stream 内容（`createException` → `{ success:false, message, data }`）
-- 客户端不能只靠 HTTP status 判断 Gemini 成败，必须看 body
+- **先 `await fetch` 拿到上游 status**，再决定客户端 Response
+- 上游 4xx/5xx：**透传 status + body**（与官方 Generative Language API 一致），并附带 CORS
+- 成功路径：仍用可读流 pipe 上游 body（status 一般为 200）
+- 仅 proxy 本地失败（超时 / 断连 / 网络）：返回官方形 `{ error: { code, message, status } }`（504 / 499 / 502）
 
 ### 4.3 Body 预读
 
@@ -189,10 +190,9 @@ body.pipeThrough(requestStream).pipeTo(writableStream)
 
 失败路径：
 
-- 无 body → stream 写 exception JSON
-- `400 <= status || status > 200` → 读 `response.text()`，写 exception  
-  （见 §6：条件等价于「仅严格 200 算成功」）
-- fetch reject / abort → catch 里写 exception
+- 上游 `!ok` → `passthroughUpstreamErrorResponse`（保留上游 status/body）
+- 上游 ok 但无 body → `createOfficialGeminiErrorResponse(502, …)`
+- fetch timeout → 504 `DEADLINE_EXCEEDED`；client abort → 499 `CANCELLED`；其它网络错误 → 502
 
 ---
 
@@ -211,11 +211,11 @@ body.pipeThrough(requestStream).pipeTo(writableStream)
 getResult(data, { success, message }) → { success, message, data, toJson() }
 ```
 
-- `createErrorResponse`：立刻返回带错误 status 的 `Response`
-- `createException`：失败结构，常用于 **stream 内** 错误（HTTP 仍是 200）
+- `createErrorResponse`：gate（路径/鉴权等）立刻返回带错误 status 的 `Response`（仍为内部 `{ success:false }` 包装）
+- `passthroughUpstreamErrorResponse` / `createOfficialGeminiErrorResponse`：上游与传输层错误，对齐官方 `{ error: { code, message, status } }`
 - `createResponse`：成功包装 + `CORS_HEADERS`
 
-两套语义并存：gate 失败用真实 HTTP status；代理中段失败用 200 + body.success=false。
+目标语义：对 Gemini 上游结果，客户端应能像直连 `generativelanguage.googleapis.com` 一样用 HTTP status + `error` 判断成败。
 
 ### 5.3 Logger
 

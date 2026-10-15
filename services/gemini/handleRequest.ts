@@ -3,7 +3,7 @@ import { CORS_HEADERS, GOOGLE_GEMINI_API_URL, TIMEOUT } from '@/services/gemini/
 import type { Context } from '@/services/gemini/createContext'
 import { extractTotalTokenCountFromBody, pickKeyLeastTokensToday, recordTokenUsage } from '@/services/gemini/keyRotation'
 import { ProcessTransformStream } from '@/services/gemini/libs/ProcessTransformStream'
-import { createErrorResponse, createException, createResponse } from '@/services/gemini/libs/response'
+import { createErrorResponse, createOfficialGeminiErrorResponse, createResponse, passthroughUpstreamErrorResponse } from '@/services/gemini/libs/response'
 import { type WebWritableStream, WritableStream } from '@/services/gemini/libs/TransformStream'
 import { isValidTrailingContentRole, type Message } from '@/services/gemini/types/message'
 import { convertStringToUint8Array } from '@/services/gemini/utils/convertStringToUint8Array'
@@ -237,41 +237,29 @@ export async function handleRequest(context: Context) {
     }
   }
 
+  const isAbortError = (error: unknown): boolean =>
+    (error instanceof Error && error.name === 'AbortError') ||
+    (typeof error === 'object' && error !== null && 'name' in error && (error as { name: string }).name === 'AbortError') ||
+    /aborted|abort/i.test(error instanceof Error ? error.message : String(error ?? ''))
+
   /**
-   * Return 200 with a readable stream immediately, then pipe Gemini's response.
-   * Helps Agent streams that run for tens of seconds.
+   * Pipe a successful upstream body into the client stream (status already chosen).
+   * Keeps ProcessTransformStream logging / token accounting.
    */
-  const writeResponseToWritableStream = (stream: WebWritableStream) => async (response: Response) => {
+  const pipeUpstreamSuccessBody = async (stream: WebWritableStream, response: Response) => {
     if (stream.locked) {
       logger.response.fail('Proxy response stream already locked; skip write.')
       return
     }
 
     const writer = stream.getWriter()
-    const { status, body: responseBody, ok } = response
+    const responseBody = response.body
+    if (!responseBody) {
+      await safeAbortWriter(writer, new Error('Upstream body missing after ok status'))
+      return
+    }
 
     try {
-      if (!responseBody) {
-        logger.response.fail(`Proxy failed with status code ${status}.\nResponse content is empty.`)
-        const exception = createException('Nothing response.')
-        await writer.ready
-        await writer.write(convertStringToUint8Array(exception.toJson()))
-        await safeCloseWriter(writer)
-        return
-      }
-
-      if (!ok) {
-        const result = await response.text()
-        const message = `Proxy failed with status code ${status}. reason:${result}`
-        const exception = createException(message)
-
-        logger.response.fail(`${message}\nResponse content is ${result}.`)
-        await writer.ready
-        await writer.write(convertStringToUint8Array(exception.toJson()))
-        await safeCloseWriter(writer)
-        return
-      }
-
       const responseStartTime = Date.now()
       const reader = responseBody.getReader()
 
@@ -303,75 +291,63 @@ export async function handleRequest(context: Context) {
         }
       }
     } catch (error) {
-      const isAbort =
-        (error instanceof Error && error.name === 'AbortError') ||
-        (typeof error === 'object' && error !== null && 'name' in error && (error as { name: string }).name === 'AbortError') ||
-        /aborted|abort/i.test(error instanceof Error ? error.message : String(error ?? ''))
-      if (isAbort) {
-        // Client navigated away / refreshed — expected, not a proxy failure.
+      if (isAbortError(error)) {
         logger.response.info('Proxy stream aborted (client disconnected).')
       } else {
         const message = error instanceof Error ? error.message : String(error)
         logger.response.fail(`Proxy failed with some errors.\n${message}`)
       }
-      // Client disconnect / abort: do not try to get another writer.
       await safeAbortWriter(writer, error)
     }
   }
 
-  const writeErrorToWritableStream = (stream: WebWritableStream) => async (error: any) => {
-    if (stream.locked) {
-      logger.response.fail('Skip error write: response stream already locked.')
-      return
-    }
-
-    const message = error instanceof Error ? error.message : error?.toString()
-    const writer = stream.getWriter()
-    try {
-      await writer.ready
-      const exception = createException(message)
-      await writer.write(convertStringToUint8Array(exception.toJson()))
-      await safeCloseWriter(writer)
-    } catch (writeError) {
-      logger.response.fail(`Failed to write error response.\n${writeError}`)
-      await safeAbortWriter(writer, writeError)
-    }
-  }
-
   logger.request.info(`Proxy request ${redactForLog(proxyUrl.toString(), secretHeaderNames)} with options ${JSON.stringify(logFetchOptions, null, 2)}.`)
-  fetch(proxyUrl, fetchOptions)
-    .then(async (response) => {
-      clearTimeout(timeoutId)
-      clientSignal.removeEventListener('abort', onClientAbort)
 
-      logger.request.info(`Request spent ${((Date.now() - requestStartTime) / 1e3).toFixed(3)}s.`)
-      responseStream.setContentSize(getContentLength(response.headers))
+  try {
+    const upstream = await fetch(proxyUrl, fetchOptions)
+    clearTimeout(timeoutId)
+    clientSignal.removeEventListener('abort', onClientAbort)
 
-      const handleResponse = writeResponseToWritableStream(responseStream.writable)
-      await handleResponse(response)
+    logger.request.info(`Request spent ${((Date.now() - requestStartTime) / 1e3).toFixed(3)}s. upstreamStatus=${upstream.status}`)
+    responseStream.setContentSize(getContentLength(upstream.headers))
+
+    // Match official Generative Language API: non-2xx keeps status + error JSON body.
+    if (!upstream.ok) {
+      const result = upstream.body ? await upstream.text() : ''
+      logger.response.fail(`Upstream failed with status ${upstream.status}. body=${result.slice(0, 500)}`)
+      return passthroughUpstreamErrorResponse(upstream, result)
+    }
+
+    if (!upstream.body) {
+      logger.response.fail(`Upstream ${upstream.status} returned an empty body.`)
+      return createOfficialGeminiErrorResponse(502, 'Upstream returned an empty body.', 'UNAVAILABLE')
+    }
+
+    logger.response.info('proxy stream start.')
+    void pipeUpstreamSuccessBody(responseStream.writable, upstream)
+    return new Response(responseStream.readable, {
+      status: upstream.status,
+      statusText: upstream.statusText || 'ok',
+      headers: clientHeaders,
     })
-    .catch(async (error) => {
-      clearTimeout(timeoutId)
-      clientSignal.removeEventListener('abort', onClientAbort)
-      const isAbort =
-        (error instanceof Error && error.name === 'AbortError') ||
-        (typeof error === 'object' && error !== null && 'name' in error && (error as { name: string }).name === 'AbortError') ||
-        /aborted|abort/i.test(String(error ?? ''))
-      if (isAbort) {
-        logger.response.info('Upstream fetch aborted (timeout or client disconnect).')
-        return
+  } catch (error) {
+    clearTimeout(timeoutId)
+    clientSignal.removeEventListener('abort', onClientAbort)
+
+    if (isAbortError(error)) {
+      const timedOut = controller.signal.aborted && /timed out/i.test(String(controller.signal.reason ?? error))
+      if (timedOut) {
+        const message = error instanceof Error ? error.message : `The request timed out after ${(TIMEOUT / 1e3).toFixed(0)}s.`
+        logger.response.fail(`Upstream fetch timed out.\n${message}`)
+        return createOfficialGeminiErrorResponse(504, message, 'DEADLINE_EXCEEDED')
       }
 
-      logger.response.fail(`Proxy failed with some errors.\n${error}`)
+      logger.response.info('Upstream fetch aborted (client disconnect).')
+      return createOfficialGeminiErrorResponse(499, 'Client disconnected before the upstream response completed.', 'CANCELLED')
+    }
 
-      try {
-        const handleResponse = writeErrorToWritableStream(responseStream.writable)
-        await handleResponse(error)
-      } catch (writeError) {
-        logger.response.fail(`Unhandled proxy stream error.\n${writeError}`)
-      }
-    })
-
-  logger.response.info('proxy stream start.')
-  return new Response(responseStream.readable, { status: 200, statusText: 'ok', headers: clientHeaders })
+    const message = error instanceof Error ? error.message : String(error)
+    logger.response.fail(`Proxy failed with some errors.\n${message}`)
+    return createOfficialGeminiErrorResponse(502, message, 'UNAVAILABLE')
+  }
 }

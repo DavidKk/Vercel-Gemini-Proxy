@@ -170,14 +170,57 @@ describe('test handleRequest', () => {
     expect(response.status).toBe(503)
   })
 
+  it('passthrough upstream 400 status and Gemini error body', async () => {
+    const upstreamBody = JSON.stringify({
+      error: {
+        code: 400,
+        message: 'Unknown name "additionalProperties"',
+        status: 'INVALID_ARGUMENT',
+      },
+    })
+    global.fetch = jest.fn().mockImplementation(async () => new Response(upstreamBody, { status: 400, headers: { 'Content-Type': 'application/json' } }))
+
+    const request = new Request('https://example.com/api/v1beta/models/gemini-2.5-flash:generateContent?key=123', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+      }),
+    })
+
+    const response = await handleRequest(createContext(request))
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: 400,
+        message: 'Unknown name "additionalProperties"',
+        status: 'INVALID_ARGUMENT',
+      },
+    })
+  })
+
   it('aborts upstream fetch when the client request signal aborts', async () => {
     const client = new AbortController()
     let upstreamSignal: AbortSignal | undefined
 
     global.fetch = jest.fn().mockImplementation((_url: unknown, init?: RequestInit) => {
       upstreamSignal = init?.signal ?? undefined
-      return new Promise(() => {
-        // never resolves — wait for abort
+      return new Promise((_resolve, reject) => {
+        const signal = init?.signal
+        if (!signal) {
+          return
+        }
+        if (signal.aborted) {
+          reject(new DOMException('Aborted', 'AbortError'))
+          return
+        }
+        signal.addEventListener(
+          'abort',
+          () => {
+            reject(new DOMException('Aborted', 'AbortError'))
+          },
+          { once: true }
+        )
       })
     })
 
@@ -186,13 +229,17 @@ describe('test handleRequest', () => {
       signal: client.signal,
     })
 
-    const response = await handleRequest(createContext(request))
-    expect(response.status).toBe(200)
+    const responsePromise = handleRequest(createContext(request))
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(upstreamSignal).toBeDefined()
     expect(upstreamSignal?.aborted).toBe(false)
 
     client.abort()
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    const response = await responsePromise
     expect(upstreamSignal?.aborted).toBe(true)
+    expect(response.status).toBe(499)
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: 499, status: 'CANCELLED' },
+    })
   })
 })
