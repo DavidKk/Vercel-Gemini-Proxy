@@ -5,6 +5,7 @@ import { extractTotalTokenCountFromBody, pickKeyLeastTokensToday, recordTokenUsa
 import { ProcessTransformStream } from '@/services/gemini/libs/ProcessTransformStream'
 import { createErrorResponse, createOfficialGeminiErrorResponse, createResponse, passthroughUpstreamErrorResponse } from '@/services/gemini/libs/response'
 import { type WebWritableStream, WritableStream } from '@/services/gemini/libs/TransformStream'
+import { sanitizeGeminiToolParametersInPayload } from '@/services/gemini/sanitizeGeminiToolParameters'
 import { isValidTrailingContentRole, type Message } from '@/services/gemini/types/message'
 import { convertStringToUint8Array } from '@/services/gemini/utils/convertStringToUint8Array'
 import { getContentLength } from '@/services/gemini/utils/getContentLength'
@@ -145,6 +146,12 @@ export async function handleRequest(context: Context) {
         logger.response.warn(`The last message in the payload does not have a valid trailing role ("user" | "function"). role=${lastContent.role}`)
         return createResponse(lastContent || null)
       }
+    }
+
+    // Gemini functionDeclarations.parameters is a proto Schema subset; clients often send
+    // full JSON Schema (e.g. additionalProperties). Strip known-invalid keys before forward.
+    if (sanitizeGeminiToolParametersInPayload(payload as unknown as Record<string, unknown>)) {
+      logger.request.info('Stripped Gemini-incompatible keys from tools.*.parameters (e.g. additionalProperties).')
     }
   }
 
