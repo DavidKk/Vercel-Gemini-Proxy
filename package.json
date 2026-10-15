@@ -60,7 +60,7 @@
     "jest-junit": "^16.0.0",
     "jest-runner-tsd": "^6.0.0",
     "json5": "^2.2.3",
-    "lint-staged": "^15.2.7",
+    "lint-staged": "^17.6.0",
     "postcss": "^8.5.19",
     "prettier": "^3.3.3",
     "pretty-error": "^4.0.0",
