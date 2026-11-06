@@ -29,7 +29,10 @@ jobs:
 
       - name: Enable corepack
         shell: bash
-        run: corepack enable
+        run: |
+          # pnpm 12 uses bin/pnpm.mjs; corepack <0.36 still resolves pnpm.cjs and breaks.
+          npm install -g corepack@latest
+          corepack enable
 
       - name: Install dependencies
         shell: bash
