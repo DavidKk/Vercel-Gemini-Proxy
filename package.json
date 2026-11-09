@@ -50,7 +50,7 @@
     "cz-customizable": "^7.5.4",
     "cz-customizable-i18n-config": "^0.0.1-alpha.2",
     "eslint": "^9.7.0",
-    "eslint-config-next": "15.5.9",
+    "eslint-config-next": "16.4.5",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.7",
