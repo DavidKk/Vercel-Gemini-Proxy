@@ -264,8 +264,8 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.14.11)(supports-color@8.1.1)(ts-node@10.9.2(@types/node@20.14.11)(typescript@5.9.3))
       jest-junit:
-        specifier: ^16.0.0
-        version: 16.0.0
+        specifier: ^17.0.0
+        version: 17.0.0
       jest-runner-tsd:
         specifier: ^6.0.0
         version: 6.0.0(@jest/test-result@29.7.0)(@tsd/typescript@5.5.3)(jest-runner@29.7.0(supports-color@8.1.1))
@@ -2969,9 +2969,9 @@ packages:
     resolution: {integrity: sha512-fP8u2pyfqx0K1rGn1R9pyE0/KTn+G7PxktWidOBTqFPLYX0b9ksaMFkhK5vrS3DVun09pckLdlx90QthlW7AmA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
-  jest-junit@16.0.0:
-    resolution: {integrity: sha512-A94mmw6NfJab4Fg/BlvVOUXzXgF0XIH6EmTgJ5NDPp4xoKq0Kr7sErb+4Xs9nZvu58pJojz5RFGpqnZYJTrRfQ==}
-    engines: {node: '>=10.12.0'}
+  jest-junit@17.0.0:
+    resolution: {integrity: sha512-RYWCkq4j59gUXj5DsgbIE7xFBZzu1gtibPhyjSjMmGaOTLnqlXhg7x9zuGCwgbCuMAyoyvk0Mi8wSrRR5uOeLA==}
+    engines: {node: '>=20.0.0'}
 
   jest-leak-detector@29.7.0:
     resolution: {integrity: sha512-kYA8IJcSYtST2BY9I+SMC32nDpBT3J2NvWJx8+JCuCdl/CR1I4EKUJROiP8XtCcxqgTTBGJNdbB1A8XRKbTetw==}
@@ -4422,9 +4422,8 @@ packages:
   utila@0.4.0:
     resolution: {integrity: sha512-Z0DbgELS9/L/75wZbro8xAnT50pBVFQZ+hUEueGDU5FN51YSCYM+jdxsfCiHjwNP/4LCDD0i/graKpeBnOXKRA==}
 
-  uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+  uuid@14.0.3:
+    resolution: {integrity: sha512-Sc5u1VVln93y1Xnz4R+CunOZc7R9LUcTmhj7Rc7Eg3HVcf7rVn2FOoa812fe0W8p3jD7xeoGSYbfqCGGH2B6xw==}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -7652,11 +7651,11 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  jest-junit@16.0.0:
+  jest-junit@17.0.0:
     dependencies:
       mkdirp: 1.0.4
       strip-ansi: 6.0.1
-      uuid: 8.3.2
+      uuid: 14.0.3
       xml: 1.0.1
 
   jest-leak-detector@29.7.0:
@@ -9296,7 +9295,7 @@ snapshots:
 
   utila@0.4.0: {}
 
-  uuid@8.3.2: {}
+  uuid@14.0.3: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
