@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
-    "@commitlint/config-conventional": "^19.2.2",
+    "@commitlint/config-conventional": "^21.2.4",
     "@jest/types": "^29.6.3",
     "@playwright/test": "^1.65.1",
     "@types/chalk": "^2.2.0",
